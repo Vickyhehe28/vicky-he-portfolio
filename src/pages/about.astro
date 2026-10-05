@@ -70,7 +70,7 @@ const lately = [
 </Base>
 
 <style>
-  .about { padding: 56px var(--gutter) 0; display: grid; gap: 28px; }
+  .about { padding: 56px var(--gutter) 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
 
   /* Intro: big black headline, smaller grey body */
   .intro { display: grid; gap: 0.9em; }
@@ -97,6 +97,13 @@ const lately = [
 
   :global(.noticed) { margin-top: clamp(48px, 7vw, 96px); }
 
+  /* Phones: photo right under the intro, then contact, then Skills and Tools side by side */
+  @media (max-width: 699px) {
+    .info { grid-template-columns: 1fr 1fr; gap: 40px 20px; }
+    .portrait { order: -1; grid-column: 1 / -1; width: min(280px, 72vw); }
+    .col--first { grid-column: 1 / -1; max-width: none; }
+    .col li { white-space: normal; }
+  }
   @media (min-width: 700px) {
     .info { grid-template-columns: repeat(3, auto); justify-content: start; column-gap: 44px; }
     .portrait { grid-column: 1 / -1; justify-self: start; }

@@ -58,13 +58,6 @@
       "hint": "things I saw",
       "color": "cobalt",
       "glyph": "dot"
-    },
-    {
-      "label": "contact",
-      "href": "/contact/",
-      "hint": "say hi",
-      "color": "pink",
-      "glyph": "burst"
     }
   ]
 }
