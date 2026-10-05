@@ -7,6 +7,7 @@ import Marquee from '../../components/Marquee.astro';
 import Gallery from '../../components/Gallery.astro';
 import Reels from '../../components/Reels.astro';
 import StoryPlayer from '../../components/StoryPlayer.astro';
+import LetterBoard from '../../components/LetterBoard.astro';
 
 export async function getStaticPaths() {
   const all = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
@@ -122,7 +123,9 @@ const imgSizes = '(min-width: 1024px) 70vw, 100vw';
 
     {d.applications.length > 0 && (
       <section class:list={['apps', { 'apps--even': d.halfAspect }]} aria-label="Applications" style={d.halfAspect ? `--half-aspect: ${d.halfAspect}` : undefined}>
-        {d.applications.map((a) => a.stories ? (
+        {d.applications.map((a) => a.board ? (
+          <LetterBoard />
+        ) : a.stories ? (
           <StoryPlayer images={a.stories} label={a.alt || 'Instagram stories'} />
         ) : a.swatches ? (
           <ul class="app-swatches reveal" role="list">
@@ -169,7 +172,7 @@ const imgSizes = '(min-width: 1024px) 70vw, 100vw';
 
     {d.gallery && <Gallery title={d.gallery.title} images={d.gallery.images} />}
 
-    {d.reels && <Reels title={d.reels.title} intro={d.reels.intro} items={d.reels.items} color={d.color} />}
+    {d.reels && <Reels title={d.reels.title} intro={d.reels.intro} link={d.reels.link} items={d.reels.items} color={d.color} />}
 
     {hasNotes && (
       <section class="block reveal" aria-labelledby="notes-h">

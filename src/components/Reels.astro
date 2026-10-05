@@ -1,23 +1,24 @@
 ---
 /**
- * Vertical (9:16) reels. A reel with a `video` plays muted on hover / when tapped;
+ * Vertical (9:16) reels. A reel with a `video` plays muted on a loop while it is on screen;
  * a reel without one shows a placeholder tile until the real file is added.
  */
 import Glyph from './Glyph.astro';
 interface Item { title: string; video?: string; poster?: ImageMetadata }
-interface Props { title: string; intro?: string; items: Item[]; color?: any }
-const { title, intro, items, color = 'tomato' } = Astro.props;
+interface Props { title: string; intro?: string; link?: { label: string; href: string }; items: Item[]; color?: any }
+const { title, intro, link, items, color = 'tomato' } = Astro.props;
 ---
 <section class="reels reveal" aria-labelledby="reels-h">
   <div class="r-head">
     <h2 class="r-title" id="reels-h">{title}</h2>
     {intro && <p class="r-intro">{intro}</p>}
+    {link && <a class="r-link" href={link.href} target="_blank" rel="noopener">{link.label} ↗</a>}
   </div>
   <ul class="r-grid" role="list">
     {items.map((r) => (
       <li class="reel">
         {r.video ? (
-          <video src={r.video} poster={r.poster?.src} muted loop playsinline preload="metadata" controls aria-label={r.title} data-reel></video>
+          <video src={r.video} poster={r.poster?.src} muted loop playsinline autoplay preload="none" aria-label={r.title} data-reel></video>
         ) : (
           <div class="ph" role="img" aria-label={`${r.title} (coming soon)`}>
             <span class="play" aria-hidden="true"><Glyph name="dot" color={color} size="12px" /></span>
@@ -34,6 +35,8 @@ const { title, intro, items, color = 'tomato' } = Astro.props;
   .r-head { display: grid; gap: 10px; margin-bottom: 24px; }
   .r-title { font: 400 clamp(28px, 3.4vw, 48px)/1.1 var(--display); letter-spacing: -0.03em; }
   .r-intro { color: var(--grey); font-size: 15px; }
+  .r-link { justify-self: start; font-size: 15px; color: var(--ink); text-underline-offset: 4px; }
+  .r-link:hover { color: var(--tomato-text); }
   .r-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0; }
   @media (min-width: 700px) { .r-grid { grid-template-columns: repeat(4, 1fr); } }
   .reel video, .ph { width: 100%; aspect-ratio: 9 / 16; border-radius: var(--radius); display: block; object-fit: cover; background: var(--ink); }
@@ -50,9 +53,13 @@ const { title, intro, items, color = 'tomato' } = Astro.props;
 </style>
 
 <script>
-  // Play on hover (mouse) — tapping uses the built-in controls
-  document.querySelectorAll<HTMLVideoElement>('[data-reel]').forEach((v) => {
-    v.addEventListener('mouseenter', () => { v.play().catch(() => {}); });
-    v.addEventListener('mouseleave', () => v.pause());
-  });
+  // Autoplay (muted, looping) while on screen; pause when scrolled away so off-screen reels don't use data
+  const reels = document.querySelectorAll<HTMLVideoElement>('[data-reel]');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => entries.forEach((e) => {
+      const v = e.target as HTMLVideoElement;
+      if (e.isIntersecting) v.play().catch(() => {}); else v.pause();
+    }), { rootMargin: '200px 0px', threshold: 0.1 });
+    reels.forEach((v) => io.observe(v));
+  }
 </script>

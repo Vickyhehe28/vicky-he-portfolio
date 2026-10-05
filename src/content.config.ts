@@ -68,10 +68,12 @@ const projects = defineCollection({
             zoom: z.number().optional(),
             // Or an Instagram-style story player (9:16 images)
             stories: z.array(z.object({ image: image(), alt: z.string() })).optional(),
+            // Or the interactive "build your own" letter board (Sky Builders)
+            board: z.boolean().optional(),
             alt: z.string().default(''),
             caption: z.string().optional(),
             size: z.enum(['full', 'half']).default('full'),
-          }).refine((a) => a.image || a.src || a.text || a.label || a.swatches || a.stories, { message: 'Each application needs an image, a src, text or swatches' }),
+          }).refine((a) => a.image || a.src || a.text || a.label || a.swatches || a.stories || a.board, { message: 'Each application needs an image, a src, text or swatches' }),
         )
         .default([]),
       results: z.object({
@@ -93,6 +95,7 @@ const projects = defineCollection({
         .object({
           title: z.string(),
           intro: z.string().optional(),
+          link: z.object({ label: z.string(), href: z.string() }).optional(), // e.g. the Instagram account, shown under the title
           // video: a file in /public (e.g. /projects/x/reel-1.mp4). Leave it out for a placeholder tile.
           items: z.array(z.object({ title: z.string(), video: z.string().optional(), poster: image().optional() })).min(1),
         })
@@ -109,9 +112,14 @@ const series = defineCollection({
       intro: z.string().optional(), // a sentence or two shown at the top of the series page
       featured: z.boolean().default(true),
       wall: z.boolean().default(false), // true = the "All photos" wall on /photography, not a series
-      layout: z.enum(['wall', 'book']).default('wall'), // book = book spreads: two side by side, then rows of three
+      layout: z.enum(['wall', 'book', 'sequence']).default('wall'), // book = book spreads: two side by side, then rows of three; sequence = full-width singles and side-by-side pairs (set span on each photo)
       hero: z.string().optional(), // big photo at the top of the series page (book layout)
-      heroStyle: z.enum(['overlay', 'cover']).default('overlay'), // overlay = full-width photo, title on it; cover = whole cover centred, title below
+      heroStyle: z.enum(['overlay', 'cover', 'plain']).default('overlay'), // overlay = full-width photo, title on it; cover = whole cover centred, title below; plain = full-width photo, title below
+      subtitle: z.string().optional(), // small grey line under the title
+      bts: z.array(z.object({ src: z.string(), alt: z.string(), video: z.boolean().default(false) })).default([]), // "behind the scenes" photos and clips at the end of the page
+      film: z.object({ src: z.string(), after: z.number() }).optional(), // video shown full width after photo number `after` (sequence layout)
+      credits: z.array(z.object({ role: z.string(), name: z.string() })).default([]), // shown at the bottom of the series page
+      showcase: z.array(z.object({ src: z.string(), alt: z.string(), w: z.number().optional(), h: z.number().optional() })).default([]), // "on display" photos after the sequence
       opening: z.enum(['blink']).optional(), // blink = eyelid intro animation when the page opens
       order: z.number().default(99),
       glyph: glyphs.default('dot'),
@@ -126,7 +134,7 @@ const series = defineCollection({
         .array(z.object({ image: image(), alt: z.string(), title: z.string().optional(), caption: z.string().optional() }))
         .default([]),
       photos: z
-        .array(z.object({ src: z.string(), alt: z.string(), w: z.number().optional(), h: z.number().optional(), title: z.string().optional(), caption: z.string().optional() }))
+        .array(z.object({ src: z.string(), alt: z.string(), w: z.number().optional(), h: z.number().optional(), span: z.enum(['full', 'half']).optional(), title: z.string().optional(), caption: z.string().optional() }))
         .default([]),
     }).refine((s) => s.cover || s.coverSrc, { message: 'A series needs a cover or coverSrc' }),
 });

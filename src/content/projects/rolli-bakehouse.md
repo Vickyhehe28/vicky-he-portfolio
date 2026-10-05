@@ -33,8 +33,8 @@ system:
   intro: "The brand’s color palette is inspired by the warmth and authenticity of artisanal baking. Brown reflects natural ingredients and handcrafted quality, orange brings energy and playfulness, and blue adds a calm, refined contrast. Together, they balance nature with a modern aesthetic, creating a brand that feels playful, elevated, and thoughtfully crafted."
 
 applications:
-  - { src: /projects/rolli/flower-mascot.gif, alt: "Animated Rolli flower mascot walking over a tray of cookies", size: half }
-  - { image: ../../assets/projects/rolli/shopping-bag.jpg, alt: "Hands holding a Rolli Bakehouse paper shopping bag with the orange logo", size: half }
+  - { src: /projects/rolli/flower-mascot.gif, alt: "Animated Rolli flower mascot walking over a tray of cookies", size: half, aspect: "4 / 5" }
+  - { image: ../../assets/projects/rolli/shopping-bag.jpg, alt: "Hands holding a Rolli Bakehouse paper shopping bag with the orange logo", size: half, aspect: "4 / 5" }
   - { image: ../../assets/projects/rolli/business-cards.jpg, alt: "Rolli Bakehouse business cards, front and back, on whipped cream", size: full }
   - { src: /projects/rolli/sticker-tee.mov, alt: "Animated Rolli stickers on a cake roll, beside a model wearing a Rolli T-shirt", size: full }
   - { image: ../../assets/projects/rolli/tote-stamp-cards.jpg, alt: "Have a Rolli Day tote bag and Rolli stamp loyalty cards", size: full }
@@ -67,10 +67,10 @@ gallery:
 
 reels:
   title: "Reels"
-  intro: "[One line about the editing in these reels]"
+  link: { label: "@rolli_bakehouse", href: "https://www.instagram.com/rolli_bakehouse/" }
   items:
-    - { title: "[Reel 1]" }
-    - { title: "[Reel 2]" }
-    - { title: "[Reel 3]" }
-    - { title: "[Reel 4]" }
+    - { title: "Rolli reel 1", video: /projects/rolli/reels/reel-1.mp4 }
+    - { title: "Rolli reel 2", video: /projects/rolli/reels/reel-2.mp4 }
+    - { title: "Rolli reel 3", video: /projects/rolli/reels/reel-3.mp4 }
+    - { title: "Rolli reel 4", video: /projects/rolli/reels/reel-4.mp4 }
 ---

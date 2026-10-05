@@ -1,0 +1,116 @@
+---
+/**
+ * "Build your own" sticker board: all 26 Sky Builders letters scattered on a board.
+ * Drag them anywhere (mouse or touch); the letter you pick up comes to the front with a little shine.
+ * Shuffle scatters them again. Letters live in public/projects/david-smith/letters/a.webp … z.webp.
+ */
+const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+// Deterministic starting scatter (same on every load until someone shuffles)
+let seed = 7;
+const rand = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+const start = letters.map((l, i) => {
+  const col = i % 9, row = Math.floor(i / 9);
+  return { l, x: 5 + col * 10.2 + rand() * 3, y: 10 + row * 28 + rand() * 8, r: Math.round(rand() * 24 - 12) };
+});
+---
+<section class="board-wrap" aria-labelledby="board-h">
+  <div class="board-head">
+    <h2 id="board-h" class="board-title">build your own</h2>
+    <p class="board-hint">Drag the letters around and make something. <button type="button" class="shuffle" data-shuffle>shuffle ↻</button></p>
+  </div>
+  <div class="board" data-board>
+    <span class="try" aria-hidden="true">↑ try it out</span>
+    {start.map((s) => (
+      <button type="button" class="sticker" aria-label={`Letter ${s.l.toUpperCase()}, drag to move`} data-sticker
+        style={`left:${s.x}%; top:${s.y}%; --r:${s.r}deg; --src:url(/projects/david-smith/letters/${s.l}.webp)`}>
+        <img src={`/projects/david-smith/letters/${s.l}.webp`} alt="" draggable="false" loading="lazy" decoding="async" />
+      </button>
+    ))}
+  </div>
+</section>
+
+<style>
+  .board-wrap { grid-column: 1 / -1; display: grid; gap: 16px; }
+  .board-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 24px; }
+  .board-title { font: 400 clamp(20px, 1.8vw, 26px)/1.2 var(--display); }
+  .board-hint { font-size: 14px; color: #888; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .shuffle { font: inherit; color: var(--ink); background: none; border: 1px solid var(--ink); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+  .shuffle:hover { background: var(--ink); color: #fff; }
+
+  .board {
+    position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius); background: #efefef; overflow: hidden;
+    container-type: inline-size; touch-action: pan-y;
+  }
+  @media (max-width: 699px) { .board { aspect-ratio: 4 / 5; } }
+  .try { position: absolute; left: 3%; bottom: 4%; font: 400 15px/1 'Bradley Hand', 'Segoe Print', 'Marker Felt', cursive; color: #777; transform: rotate(3deg); pointer-events: none; }
+
+  .sticker {
+    position: absolute; height: 7.5cqw; padding: 0; border: 0; background: none; cursor: grab; touch-action: none;
+    transform: translate(-0%, -0%) rotate(var(--r)); transition: transform .2s ease, filter .2s ease;
+    /* White sticker edge + soft shadow */
+    filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 3px 4px rgba(0,0,0,.14));
+  }
+  @media (max-width: 699px) { .sticker { height: 11cqw; } }
+  .sticker img { height: 100%; width: auto; display: block; pointer-events: none; user-select: none; }
+  /* Shine sweep, cut to the letter's shape */
+  .sticker::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+    background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.75) 50%, transparent 65%) 150% 0 / 250% 100% no-repeat;
+    -webkit-mask: var(--src) center / contain no-repeat; mask: var(--src) center / contain no-repeat;
+  }
+  .sticker:hover::after, .sticker.lift::after { opacity: 1; animation: shine .7s ease forwards; }
+  @keyframes shine { to { background-position: -50% 0; } }
+  .sticker.lift { cursor: grabbing; transform: rotate(var(--r)) scale(1.1);
+    filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 10px 12px rgba(0,0,0,.22)); }
+  .sticker:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+  .board.settling .sticker { transition: left .6s cubic-bezier(.2,.8,.2,1), top .6s cubic-bezier(.2,.8,.2,1), transform .6s ease; }
+  @media (prefers-reduced-motion: reduce) { .sticker, .board.settling .sticker { transition: none; } .sticker::after { display: none; } }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-board]').forEach((board) => {
+    const stickers = [...board.querySelectorAll<HTMLElement>('[data-sticker]')];
+    let z = 10;
+    const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+    const place = (el: HTMLElement, xPx: number, yPx: number) => {
+      const b = board.getBoundingClientRect();
+      el.style.left = `${clamp(xPx, -el.offsetWidth * 0.3, b.width - el.offsetWidth * 0.7) / b.width * 100}%`;
+      el.style.top = `${clamp(yPx, -el.offsetHeight * 0.3, b.height - el.offsetHeight * 0.7) / b.height * 100}%`;
+    };
+
+    stickers.forEach((el) => {
+      el.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        el.setPointerCapture(e.pointerId);
+        el.style.zIndex = String(++z);
+        el.classList.add('lift');
+        const b = board.getBoundingClientRect(), r = el.getBoundingClientRect();
+        const dx = e.clientX - r.left, dy = e.clientY - r.top;
+        const move = (ev: PointerEvent) => place(el, ev.clientX - b.left - dx + (r.width - el.offsetWidth) / 2, ev.clientY - b.top - dy + (r.height - el.offsetHeight) / 2);
+        const up = () => { el.classList.remove('lift'); el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); };
+        el.addEventListener('pointermove', move);
+        el.addEventListener('pointerup', up);
+        el.addEventListener('pointercancel', up);
+      });
+      // Keyboard: arrow keys nudge the focused letter
+      el.addEventListener('keydown', (e) => {
+        const step = e.shiftKey ? 40 : 12;
+        const d = ({ ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] } as Record<string, number[]>)[e.key];
+        if (!d) return;
+        e.preventDefault();
+        el.style.zIndex = String(++z);
+        place(el, el.offsetLeft + d[0], el.offsetTop + d[1]);
+      });
+    });
+
+    board.closest('.board-wrap')?.querySelector('[data-shuffle]')?.addEventListener('click', () => {
+      board.classList.add('settling');
+      stickers.forEach((el) => {
+        el.style.left = `${4 + Math.random() * 84}%`;
+        el.style.top = `${6 + Math.random() * 70}%`;
+        el.style.setProperty('--r', `${Math.round(Math.random() * 40 - 20)}deg`);
+      });
+      setTimeout(() => board.classList.remove('settling'), 650);
+    });
+  });
+</script>

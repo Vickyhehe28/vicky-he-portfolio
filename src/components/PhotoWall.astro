@@ -2,20 +2,21 @@
 /**
  * Photography wall: every photo from every series in one masonry grid.
  * layout="book" instead shows book spreads: the first two side by side, the rest in rows of three.
+ * layout="sequence" shows full-width singles and side-by-side pairs, set per photo with span: full | half.
  * Clicking a photo opens it full screen; click the dark area (or press Esc) to close,
  * arrow keys or a swipe move between photos.
  */
-interface Photo { src: string; alt: string; w?: number; h?: number; title: string; caption: string; series: string; seriesTitle: string }
+interface Photo { src: string; alt: string; w?: number; h?: number; span?: 'full' | 'half'; title: string; caption: string; series: string; seriesTitle: string }
 interface Series { id: string; title: string; theme: string; intro?: string }
-interface Props { photos: Photo[]; series: Series[]; layout?: 'wall' | 'book' }
+interface Props { photos: Photo[]; series: Series[]; layout?: 'wall' | 'book' | 'sequence' }
 const { photos, layout = 'wall' } = Astro.props;
 // Book layout: a lone spread left over in the last row of three sits centred at the larger size
 const lone = layout === 'book' && (photos.length - 2) % 3 === 1;
 ---
 <section class="wall" data-wall data-layout={layout}>
-  <div class:list={['grid', { book: layout === 'book' }]} data-grid>
+  <div class:list={['grid', { book: layout === 'book', seq: layout === 'sequence' }]} data-grid>
     {photos.map((p, i) => (
-      <div class:list={['tile', { lead: layout === 'book' && i < 2, end: lone && i === photos.length - 1 }]} data-ratio={p.w && p.h ? p.h / p.w : 1.25}>
+      <div class:list={['tile', { lead: layout === 'book' && i < 2, end: lone && i === photos.length - 1, full: layout === 'sequence' && p.span !== 'half' }]} data-ratio={p.w && p.h ? p.h / p.w : 1.25}>
         <button type="button" class="open" data-open={i} aria-label={`View photo ${i + 1}`}>
           <img src={p.src} alt={p.alt} width={p.w} height={p.h} loading={i < 12 ? 'eager' : 'lazy'} decoding="async" />
         </button>
@@ -47,6 +48,13 @@ const lone = layout === 'book' && (photos.length - 2) % 3 === 1;
     .grid.book .tile.lead { grid-column: span 6; }
     .grid.book .tile.end { grid-column: 4 / span 6; }
   }
+  /* Sequence: an even two-column grid (every photo cropped to the same 2:3 shape); span: full takes a whole row */
+  .grid.seq { display: grid; grid-template-columns: 1fr; gap: clamp(12px, 1.4vw, 20px); }
+  .grid.seq .tile:not(.full) img { aspect-ratio: 2 / 3; object-fit: cover; }
+  .grid.seq .tile.full { grid-column: 1 / -1; display: flex; justify-content: center; }
+  .grid.seq .tile.full .open { width: auto; }
+  .grid.seq .tile.full img { width: auto; max-width: 100%; max-height: 92svh; }
+  @media (min-width: 700px) { .grid.seq { grid-template-columns: 1fr 1fr; } }
   .open { display: block; width: 100%; padding: 0; border: 0; background: var(--soft); border-radius: var(--radius); overflow: hidden; cursor: zoom-in; }
   .open img { width: 100%; height: auto; display: block; }
 
@@ -85,7 +93,7 @@ const lone = layout === 'book' && (photos.length - 2) % 3 === 1;
       });
       grid.replaceChildren(...columns);
     };
-    if (wall.dataset.layout !== 'book') {
+    if (wall.dataset.layout === 'wall') {
       layout();
       addEventListener('resize', layout);
     }
