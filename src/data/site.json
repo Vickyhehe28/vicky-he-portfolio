@@ -1,0 +1,70 @@
+{
+  "name": "Vicky He",
+  "logo": [
+    "Vicky",
+    "He"
+  ],
+  "logoGlyph": null,
+  "logoColor": "tomato",
+  "role": "visual designer + photographer",
+  "roles": [
+    {
+      "text": "visual designer",
+      "color": "tomato"
+    },
+    {
+      "text": "photographer",
+      "color": "cobalt"
+    },
+    {
+      "text": "bread baker",
+      "color": "green"
+    }
+  ],
+  "intro": "I create visual experiences people [connect] with.",
+  "introGlyph": null,
+  "introImages": [
+    "/intro/intro-01.jpg",
+    "/intro/intro-02.jpg",
+    "/intro/intro-03.jpg",
+    "/intro/intro-04.jpg",
+    "/intro/intro-05.jpg",
+    "/intro/intro-06.jpg",
+    "/intro/intro-07.jpg"
+  ],
+  "description": "[One or two sentences for Google and link previews: who you are and what you do.]",
+  "email": "yongqihe@usc.edu",
+  "instagram": "https://instagram.com/[handle]",
+  "linkedin": "https://www.linkedin.com/in/vickyhee",
+  "resume": "/resume.pdf",
+  "nav": [
+    {
+      "label": "about",
+      "href": "/about/",
+      "hint": "hi!",
+      "color": "green",
+      "glyph": "flower"
+    },
+    {
+      "label": "design",
+      "href": "/#work",
+      "hint": "things I made",
+      "color": "tomato",
+      "glyph": "star"
+    },
+    {
+      "label": "photography",
+      "href": "/photography/",
+      "hint": "things I saw",
+      "color": "cobalt",
+      "glyph": "dot"
+    },
+    {
+      "label": "contact",
+      "href": "/contact/",
+      "hint": "say hi",
+      "color": "pink",
+      "glyph": "burst"
+    }
+  ]
+}

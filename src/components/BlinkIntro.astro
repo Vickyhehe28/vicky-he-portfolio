@@ -1,0 +1,41 @@
+---
+/**
+ * "A Blink" opening: two white panels close over the content area like eyelids, open a crack,
+ * close again, then slide fully apart. Plays each time the page loads, never blocks clicks or
+ * scrolling, and leaves the sidebar alone. Skipped for visitors who prefer reduced motion.
+ */
+---
+<div class="lids" aria-hidden="true">
+  <span class="lid lid--top"></span>
+  <span class="lid lid--bottom"></span>
+</div>
+
+<style>
+  .lids {
+    position: fixed; top: 0; bottom: 0; left: 0; right: 0; z-index: 15; pointer-events: none; overflow: hidden;
+    animation: lids-done 0s linear 2.25s forwards;
+  }
+  @media (min-width: 1024px) { .lids { left: var(--sidebar); } }
+  @media (prefers-reduced-motion: reduce) { .lids { display: none; } }
+
+  /* White lids; a soft shadow and a thin "lash line" along the edges where they meet,
+     so the blink reads clearly even over the white page */
+  .lid { position: absolute; left: 0; right: 0; height: 50%; background: #fff; animation-duration: 2.25s; animation-fill-mode: both; }
+  .lid--top { top: 0; animation-name: lid-top; animation-duration: 2.25s; animation-fill-mode: both; box-shadow: 0 10px 24px -8px rgba(0, 0, 0, .22); }
+  .lid--bottom { bottom: 0; animation-name: lid-bottom; animation-duration: 2.25s; animation-fill-mode: both; border-top: 1px solid rgba(0, 0, 0, .55); box-shadow: 0 -10px 24px -8px rgba(0, 0, 0, .22); }
+
+  /* 0–0.4s closed · 0.4–0.75s open ~12% · 0.75–1.15s close · 1.15–2.25s slide fully apart */
+  @keyframes lid-top {
+    0%, 17.8% { transform: translateY(0); animation-timing-function: ease-out; }
+    33.3% { transform: translateY(-12%); animation-timing-function: ease-in-out; }
+    51.1% { transform: translateY(0); animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+    100% { transform: translateY(-110%); }
+  }
+  @keyframes lid-bottom {
+    0%, 17.8% { transform: translateY(0); animation-timing-function: ease-out; }
+    33.3% { transform: translateY(12%); animation-timing-function: ease-in-out; }
+    51.1% { transform: translateY(0); animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+    100% { transform: translateY(110%); }
+  }
+  @keyframes lids-done { to { visibility: hidden; } }
+</style>

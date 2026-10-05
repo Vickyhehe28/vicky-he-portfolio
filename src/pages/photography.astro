@@ -1,0 +1,85 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PhotoWall from '../components/PhotoWall.astro';
+import data from '../data/photography.json';
+import { seriesPhotos, seriesCover } from '../lib/series';
+
+const entries = (await getCollection('series', ({ data }) => data.featured)).sort((a, b) => a.data.order - b.data.order);
+const wall = entries.filter((s) => s.data.wall);
+const series = entries.filter((s) => !s.data.wall);
+const photos = wall.flatMap(seriesPhotos);
+---
+<Base title="Photography" current="photography">
+  <header class="ph-head">
+    <p class="eyebrow">( photography )</p>
+    <p class="ph-intro">{data.intro}</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Photography view">
+    <button type="button" role="tab" id="tab-all" aria-controls="panel-all" aria-selected="true" data-tab="all">( all photos )</button>
+    <button type="button" role="tab" id="tab-series" aria-controls="panel-series" aria-selected="false" data-tab="series">( photo series )</button>
+  </div>
+
+  <section id="panel-all" role="tabpanel" aria-labelledby="tab-all" data-panel="all">
+    <PhotoWall photos={photos} series={[]} />
+  </section>
+
+  <section id="panel-series" role="tabpanel" aria-labelledby="tab-series" data-panel="series" hidden>
+    <ul class="series" role="list">
+      {series.map((s) => {
+        const cover = seriesCover(s);
+        return (
+          <li>
+            <a class="card" href={`/photography/${s.id}/`}>
+              <span class="c-img"><img src={cover} alt={s.data.coverAlt} loading="lazy" decoding="async" style={`object-position:${s.data.coverPosition}`} /></span>
+              <span class="c-info">
+                <span class="c-title">{s.data.title}</span>
+                <span class="c-meta">{s.data.theme} · {seriesPhotos(s).length} photos</span>
+              </span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .ph-head { padding: 56px var(--gutter) 24px; display: grid; gap: 12px; }
+  .ph-intro { font: 400 clamp(20px, 2vw, 28px)/1.35 var(--display); letter-spacing: -0.015em; max-width: 30ch; }
+
+  .tabs { display: flex; gap: 28px; padding: 0 var(--gutter) 24px; }
+  .tabs button {
+    font: 400 clamp(17px, 1.4vw, 20px)/1.2 var(--display); background: none; border: 0; padding: 0 0 6px; color: var(--grey);
+    border-bottom: 1px solid transparent; cursor: pointer; transition: color .2s, border-color .2s;
+  }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button[aria-selected='true'] { color: var(--ink); border-bottom-color: var(--ink); }
+  [data-panel][hidden] { display: none; }
+
+  .series { display: grid; grid-template-columns: 1fr; gap: 28px 12px; padding: 0 var(--gutter); }
+  @media (min-width: 700px) { .series { grid-template-columns: repeat(3, 1fr); } }
+  .card { display: grid; gap: 12px; color: inherit; text-decoration: none; }
+  .c-img { display: block; aspect-ratio: 4 / 5; border-radius: var(--radius); overflow: hidden; background: var(--soft); border: 1px solid #e2e2e2; }
+  .c-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .9s var(--ease); }
+  .card:hover .c-img img, .card:focus-visible .c-img img { transform: scale(1.03); }
+  .c-info { display: grid; gap: 4px; }
+  .c-title { font: 400 clamp(18px, 1.5vw, 22px)/1.2 var(--display); }
+  .c-meta { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--grey); }
+</style>
+
+<script>
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+  const panels = [...document.querySelectorAll<HTMLElement>('[data-panel]')];
+  const select = (name: string) => {
+    tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.tab === name)));
+    panels.forEach((p) => { p.hidden = p.dataset.panel !== name; });
+  };
+  tabs.forEach((t) => t.addEventListener('click', () => {
+    select(t.dataset.tab!);
+    history.replaceState(null, '', t.dataset.tab === 'series' ? '#series' : location.pathname);
+  }));
+  // /photography/#series opens straight on the series list (used by the "back" link on series pages)
+  if (location.hash === '#series') select('series');
+</script>

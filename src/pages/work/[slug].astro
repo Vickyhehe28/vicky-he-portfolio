@@ -1,0 +1,285 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Glyph from '../../components/Glyph.astro';
+import Marquee from '../../components/Marquee.astro';
+import Gallery from '../../components/Gallery.astro';
+import Reels from '../../components/Reels.astro';
+import StoryPlayer from '../../components/StoryPlayer.astro';
+
+export async function getStaticPaths() {
+  const all = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+  return all.map((entry, i) => ({
+    params: { slug: entry.id },
+    props: { entry, next: all[(i + 1) % all.length] },
+  }));
+}
+
+const { entry, next } = Astro.props;
+const d = entry.data;
+const { Content } = await render(entry);
+const hasNotes = Boolean(entry.body && entry.body.replace(/<!--[\s\S]*?-->/g, '').trim());
+
+// Pick black or white text for a color swatch
+const textOn = (hex: string) => {
+  const n = parseInt(hex.replace('#', ''), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+    const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.25 ? '#0a0a0a' : '#ffffff';
+};
+
+const sys = { type: [], colors: [], ...d.system };
+const hasSystem = Boolean(sys.intro || sys.logo || sys.type.length || sys.typeImage || sys.colors.length);
+const sections = [
+  { id: 'overview', label: 'Overview', text: d.overview },
+  { id: 'challenge', label: 'Challenge', text: d.challenge },
+  { id: 'solution', label: 'Solution', text: d.solution },
+];
+const pad = (n: number) => String(n).padStart(2, '0');
+const imgSizes = '(min-width: 1024px) 70vw, 100vw';
+---
+<Base title={d.title} description={d.seoDescription ?? d.summary} ogImage={d.cover} current="design">
+  <article class="cs" style={`--c: var(--${d.color}); --ct: var(--${d.color}-text)`}>
+    <nav class="crumb" aria-label="Breadcrumb">
+      <a href="/#work">( design )</a> <span aria-hidden="true">/</span> <span aria-current="page">{d.title}</span>
+    </nav>
+
+    <header class="head">
+      <h1 class="title">{d.title}<Glyph name={d.glyph} color={d.color} size="0.42em" class="tg" /></h1>
+      <p class="summary">{d.summary}</p>
+      <ul class="tags" role="list">{d.tags.map((t) => <li class="pill">{t}</li>)}</ul>
+    </header>
+
+    <dl class="meta">
+      <div><dt>Client</dt><dd>{d.client}</dd></div>
+      {d.industry && <div><dt>Industry</dt><dd>{d.industry}</dd></div>}
+      <div><dt>Role</dt><dd>{d.role}</dd></div>
+      <div><dt>Year</dt><dd>{d.year}</dd></div>
+      <div><dt>Deliverables</dt><dd>{d.tags.join(', ')}</dd></div>
+      {d.website && <div><dt>Website</dt><dd><a class="ext" href={/^https?:/.test(d.website) ? d.website : `https://${d.website.replace(/^\/\//, '')}`} target="_blank" rel="noopener">{`${d.website}\u00a0↗`}</a></dd></div>}
+    </dl>
+
+    <figure class="hero-img">
+      {d.heroSrc ? (
+        <video src={d.heroSrc} aria-label={d.heroAlt} autoplay muted loop playsinline></video>
+      ) : d.hero ? (
+        <img src={d.hero.src} width={d.hero.width} height={d.hero.height} alt={d.heroAlt} loading="eager" fetchpriority="high" decoding="async" />
+      ) : null}
+    </figure>
+
+    {sections.map((s, i) => (
+      <section class="block reveal" id={s.id} aria-labelledby={`${s.id}-h`}>
+        <h2 class="label" id={`${s.id}-h`}><span class="num">{pad(i + 1)}</span><Glyph name={d.glyph} color={d.color} size="0.8em" />{s.label}</h2>
+        <p class="body">{s.text}</p>
+      </section>
+    ))}
+
+    {d.marquee.length > 0 && <Marquee words={d.marquee} />}
+
+    {hasSystem && (
+      <section class="block block--wide reveal" id="system" aria-labelledby="system-h">
+        <h2 class="label" id="system-h"><span class="num">04</span><Glyph name={d.glyph} color={d.color} size="0.8em" />Design system</h2>
+        <div class="system">
+          {sys.intro && <p class="body">{sys.intro}</p>}
+
+          {sys.logo && (
+            <figure class="sys-card">
+              <figcaption class="eyebrow">Logo</figcaption>
+              <Image src={sys.logo.image} alt={sys.logo.alt} widths={[800, 1400, 2000]} sizes={imgSizes} />
+              {sys.logo.caption && <p class="cap">{sys.logo.caption}</p>}
+            </figure>
+          )}
+
+          {(sys.type.length > 0 || sys.typeImage) && (
+            <div class="sys-card">
+              <p class="eyebrow">Typography</p>
+              <div class="type">
+                {sys.typeImage && <Image src={sys.typeImage.image} alt={sys.typeImage.alt} widths={[600, 1000, 1600]} sizes="(min-width: 1024px) 40vw, 100vw" />}
+                <ul class="type-list" role="list">
+                  {sys.type.map((t) => <li><span class="tn">{t.name}</span><span class="tu">{t.use}</span></li>)}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {sys.colors.length > 0 && (
+            <div class="sys-card">
+              <p class="eyebrow">Color</p>
+              <ul class="swatches" role="list">
+                {sys.colors.map((c) => (
+                  <li style={`background:${c.hex}; color:${textOn(c.hex)}`}>
+                    <span>{c.name}</span><span class="hex">{c.hex.toUpperCase()}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </section>
+    )}
+
+    {d.applications.length > 0 && (
+      <section class:list={['apps', { 'apps--even': d.halfAspect }]} aria-label="Applications" style={d.halfAspect ? `--half-aspect: ${d.halfAspect}` : undefined}>
+        {d.applications.map((a) => a.stories ? (
+          <StoryPlayer images={a.stories} label={a.alt || 'Instagram stories'} />
+        ) : a.swatches ? (
+          <ul class="app-swatches reveal" role="list">
+            {a.swatches.map((c) => (
+              <li class:list={[{ 'has-photo': c.image }]}>
+                <span class="sw" style={`background:${c.hex}; color:${textOn(c.hex)}`}>
+                  {c.name && <span>{c.name}</span>}<span class="hex">{c.hex.toUpperCase()}</span>
+                </span>
+                {c.image && <img src={c.image.src} width={c.image.width} height={c.image.height} alt={c.alt ?? ''} loading="lazy" decoding="async" style={c.position ? `object-position: ${c.position}` : undefined} />}
+              </li>
+            ))}
+          </ul>
+        ) : (a.text || a.label) && !a.image && !a.src ? (
+          <div class:list={['app-text', 'reveal', `app--${a.size}`]}>
+            {a.label && <p class="eyebrow app-label">{a.label}</p>}
+            {a.text && a.text.split(/\n\s*\n/).map((para) => <p class="app-body">{para.trim()}</p>)}
+          </div>
+        ) : (
+          <figure class:list={['app', 'reveal', `app--${a.size}`, { 'app--framed': a.aspect || a.zoom || a.position }]} style={[a.aspect && `--aspect: ${a.aspect}`, a.zoom && `--zoom: ${a.zoom}`, a.position && `--pos: ${a.position}`].filter(Boolean).join('; ') || undefined}>
+            {a.image ? (
+              <img src={a.image.src} width={a.image.width} height={a.image.height} alt={a.alt} loading="lazy" decoding="async" />
+            ) : /\.(mp4|webm|mov)$/i.test(a.src ?? '') ? (
+              <video src={a.src} aria-label={a.alt} autoplay muted loop playsinline preload="metadata"></video>
+            ) : (
+              <img src={a.src} alt={a.alt} loading="lazy" decoding="async" />
+            )}
+            {a.caption && <figcaption class="cap">{a.caption}</figcaption>}
+          </figure>
+        ))}
+      </section>
+    )}
+
+    <section class="block reveal" id="results" aria-labelledby="results-h">
+      <h2 class="label" id="results-h"><span class="num">{hasSystem ? '05' : '04'}</span><Glyph name={d.glyph} color={d.color} size="0.8em" />Results</h2>
+      <div>
+        <p class="body">{d.results.text}</p>
+        {d.results.metrics.length > 0 && (
+          <dl class="metrics">
+            {d.results.metrics.map((m) => <div><dt>{m.label}</dt><dd>{m.value}</dd></div>)}
+          </dl>
+        )}
+      </div>
+    </section>
+
+    {d.gallery && <Gallery title={d.gallery.title} images={d.gallery.images} />}
+
+    {d.reels && <Reels title={d.reels.title} intro={d.reels.intro} items={d.reels.items} color={d.color} />}
+
+    {hasNotes && (
+      <section class="block reveal" aria-labelledby="notes-h">
+        <h2 class="label" id="notes-h"><Glyph name={d.glyph} color={d.color} size="0.8em" />Notes</h2>
+        <div class="body prose"><Content /></div>
+      </section>
+    )}
+
+    {next && next.id !== entry.id && (
+      <a class="next reveal" href={`/work/${next.id}/`} style={`--nc: var(--${next.data.color})`}>
+        <span class="eyebrow">( next project )</span>
+        <span class="next-t">{next.data.title} <Glyph name={next.data.glyph} color={next.data.color} size="0.5em" class="ng" /></span>
+      </a>
+    )}
+  </article>
+</Base>
+
+<style>
+  .cs { padding: 24px var(--gutter) 0; }
+  .crumb { font-size: 14px; color: var(--grey); }
+  .crumb a { color: var(--ink); text-decoration: none; }
+  .ext { color: inherit; text-underline-offset: 3px; }
+  .ext:hover { color: var(--ct); }
+  .crumb a:hover { color: var(--ct); }
+
+  .head { padding: 56px 0 40px; }
+  .title { font-size: clamp(44px, 7.5vw, 112px); line-height: .98; letter-spacing: -0.045em; }
+  .title :global(.tg) { vertical-align: .55em; margin-left: .12em; }
+  .summary { font: 400 clamp(19px, 1.7vw, 24px)/1.4 var(--display); letter-spacing: -0.01em; margin-top: 24px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 22px; padding: 0; }
+
+  /* Items sit side by side with the same gap between each, whatever their length */
+  .meta { display: flex; flex-wrap: wrap; gap: 20px 56px; padding: 20px 0 28px; border-top: 1px solid var(--ink); }
+  .meta > div { flex: 0 1 auto; max-width: 15em; }
+  .meta dt { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--grey); }
+  .meta dd { margin-top: 4px; font-size: 15px; }
+
+  .hero-img img, .hero-img video, .app img, .app video, .sys-card img { width: 100%; border-radius: var(--radius); }
+  .hero-img video { display: block; height: auto; }
+  .app-text { grid-column: 1 / -1; display: grid; gap: 14px; padding: 28px 0 36px; }
+  .app-label { color: var(--grey); }
+  .app-text:has(.app-label):not(:has(.app-body)) { padding: 56px 0 4px; }
+  .app-text:has(.app-label):not(:has(.app-body)) .app-label { font: 400 clamp(24px, 2.6vw, 36px)/1.1 var(--display); letter-spacing: -0.02em; text-transform: none; color: var(--ink); }
+  .app-swatches { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0; }
+  @media (min-width: 700px) { .app-swatches { grid-template-columns: repeat(6, 1fr); } }
+  .app-swatches li { display: grid; border-radius: var(--radius); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  .app-swatches .sw { aspect-ratio: 3 / 4; padding: 14px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; font-size: 14px; }
+  .app-swatches .has-photo .sw { aspect-ratio: 1 / 1; }
+
+  /* Side-by-side images share one shape so rows line up with no gaps */
+  .apps--even .app--half img, .apps--even .app--half video { aspect-ratio: var(--half-aspect); object-fit: cover; height: auto; }
+  /* Per-image framing: crop shape, focal point, zoom */
+  .app--framed { overflow: hidden; border-radius: var(--radius); }
+  .apps .app.app--framed img, .apps .app.app--framed video {
+    aspect-ratio: var(--aspect, var(--half-aspect, auto)); object-fit: cover; object-position: var(--pos, center);
+    transform: scale(var(--zoom, 1)); transform-origin: var(--pos, center); height: auto;
+  }
+  .app-swatches img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
+  .app-body { font: 400 clamp(18px, 1.6vw, 24px)/1.45 var(--display); letter-spacing: -0.01em; }
+  .app video { display: block; height: auto; }
+
+  .block { display: grid; gap: 16px; padding: 72px 0 0; }
+  .label { display: flex; align-items: center; gap: 10px; font-size: 15px; font-family: var(--body); font-weight: 500; letter-spacing: .02em; text-transform: uppercase; }
+  .num { color: var(--ct); font-variant-numeric: tabular-nums; }
+  .body { font: 400 clamp(20px, 1.9vw, 28px)/1.4 var(--display); letter-spacing: -0.015em; }
+
+  .system { display: grid; gap: 40px; }
+  .sys-card { display: grid; gap: 14px; }
+  .type { display: grid; gap: 16px; }
+  .type-list { padding: 0; border-top: 1px solid var(--rule); }
+  .type-list li { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .tn { font: 500 20px/1.2 var(--display); }
+  .tu { color: var(--grey); font-size: 14px; text-align: right; }
+  .swatches { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0; }
+  .swatches li {
+    aspect-ratio: 1 / 1; border-radius: var(--radius); padding: 14px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); font-size: 14px;
+  }
+  .hex { font-size: 12px; letter-spacing: .04em; opacity: .85; }
+
+  .apps { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding-top: 72px; }
+  .app--full { grid-column: 1 / -1; }
+  .cap { font-size: 13px; color: var(--grey); margin-top: 10px; }
+
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px; margin-top: 36px; }
+  .metrics div { border-top: 1px solid var(--ink); padding-top: 12px; display: flex; flex-direction: column-reverse; gap: 6px; }
+  .metrics dd { font: 500 clamp(40px, 4.5vw, 64px)/1 var(--display); letter-spacing: -0.04em; color: var(--ink); }
+  .metrics dt { font-size: 13px; color: var(--grey); }
+  .prose :global(p + p) { margin-top: 1em; }
+
+  .next {
+    display: flex; flex-direction: column; gap: 10px; margin-top: 120px; padding: 28px 0 0;
+    border-top: 1px solid var(--ink); text-decoration: none;
+  }
+  .next-t { font: 500 clamp(40px, 6vw, 88px)/1 var(--display); letter-spacing: -0.045em; display: inline-flex; align-items: center; gap: .2em; }
+  .next :global(.ng) { transition: transform .6s var(--ease); }
+  .next:hover :global(.ng), .next:focus-visible :global(.ng) { transform: rotate(180deg) scale(1.3); }
+
+  @media (min-width: 700px) {
+
+    .swatches { grid-template-columns: repeat(4, 1fr); }
+    .type { grid-template-columns: 1fr 1fr; align-items: start; }
+    .apps { gap: 20px; }
+  }
+  @media (min-width: 1024px) {
+    .cs { padding: 28px var(--gutter) 0; }
+    .head { padding-top: 12vh; }
+    .block { grid-template-columns: minmax(180px, 1fr) 3fr; gap: 32px; padding-top: 120px; }
+    .label { align-self: start; position: sticky; top: 28px; }
+    .apps { padding-top: 120px; }
+  }
+</style>

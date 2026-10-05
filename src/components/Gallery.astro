@@ -1,0 +1,70 @@
+---
+/**
+ * Swipeable photo carousel. Scroll/swipe or use the arrows; it snaps to each photo.
+ * Works without JavaScript (plain horizontal scroll); the arrows need JS.
+ */
+import { Image } from 'astro:assets';
+interface Props { title: string; images: { image: ImageMetadata; alt: string }[]; id?: string }
+const { title, images, id = 'gallery' } = Astro.props;
+---
+<section class="gallery reveal" aria-labelledby={`${id}-h`} data-gallery>
+  <div class="g-head">
+    <h2 class="g-title" id={`${id}-h`}>{title}</h2>
+    <div class="g-nav">
+      <button type="button" class="g-btn" data-prev aria-label="Previous photos">←</button>
+      <button type="button" class="g-btn" data-next aria-label="Next photos">→</button>
+    </div>
+  </div>
+  <ul class="g-track" role="list" data-track tabindex="0" aria-label={`${title}, ${images.length} photos`}>
+    {images.map((p) => (
+      <li class="g-item">
+        <Image src={p.image} alt={p.alt} widths={[480, 720, 1000]} sizes="(min-width: 1024px) 26vw, (min-width: 700px) 40vw, 78vw" quality={85} loading="lazy" decoding="async" />
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .gallery { padding-top: 120px; }
+  .g-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 24px; }
+  .g-title { font: 400 clamp(28px, 3.4vw, 48px)/1.1 var(--display); letter-spacing: -0.03em; }
+  .g-nav { display: flex; gap: 8px; }
+  .g-btn {
+    width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--ink); background: none;
+    color: var(--ink); font-size: 18px; cursor: pointer; transition: background .2s, color .2s;
+  }
+  .g-btn:hover { background: var(--ink); color: #fff; }
+  .g-btn:disabled { opacity: .3; cursor: default; background: none; color: var(--ink); }
+
+  .g-track {
+    display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 0 12px;
+    scrollbar-width: none; overscroll-behavior-x: contain;
+  }
+  .g-track::-webkit-scrollbar { display: none; }
+  .g-item { flex: 0 0 78%; scroll-snap-align: start; }
+  .g-item :global(img) { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--radius); display: block; }
+  @media (min-width: 700px) { .g-item { flex-basis: 40%; } }
+  @media (min-width: 1024px) { .g-item { flex-basis: calc((100% - 24px) / 3); } }
+  @media (prefers-reduced-motion: no-preference) { .g-track { scroll-behavior: smooth; } }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-gallery]').forEach((g) => {
+    const track = g.querySelector<HTMLElement>('[data-track]')!;
+    const prev = g.querySelector<HTMLButtonElement>('[data-prev]')!;
+    const next = g.querySelector<HTMLButtonElement>('[data-next]')!;
+    const step = () => (track.querySelector<HTMLElement>('li')?.offsetWidth ?? 300) + 12;
+    const update = () => {
+      prev.disabled = track.scrollLeft < 4;
+      next.disabled = track.scrollLeft + track.clientWidth > track.scrollWidth - 4;
+    };
+    prev.addEventListener('click', () => track.scrollBy({ left: -step() }));
+    next.addEventListener('click', () => track.scrollBy({ left: step() }));
+    track.addEventListener('scroll', update, { passive: true });
+    track.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); track.scrollBy({ left: step() }); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); track.scrollBy({ left: -step() }); }
+    });
+    update();
+  });
+</script>

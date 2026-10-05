@@ -1,0 +1,58 @@
+---
+/**
+ * "little things I noticed": a row of five square photos, each with a caption that fades in on hover.
+ * Photos live in public/about/noticed-1.jpg … noticed-5.jpg (a grey placeholder shows if one is missing).
+ * On phones the row scrolls sideways and the captions are always visible.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+
+const captions = [
+  'a capybara, completely unbothered',
+  'salt bread, before the oven',
+  'a good latte deserves a close look',
+  'Wally, negotiating for a muffin',
+  'the sky in La Jolla, showing off',
+];
+const shots = captions.map((caption, i) => {
+  const file = `noticed-${i + 1}.jpg`;
+  return { file, caption, src: fs.existsSync(path.join(process.cwd(), 'public/about', file)) ? `/about/${file}` : null };
+});
+---
+<section class="noticed" aria-labelledby="noticed-h">
+  <h2 id="noticed-h" class="label">little things I noticed</h2>
+  <ul class="row" role="list">
+    {shots.map((s) => (
+      <li>
+        <figure class="shot">
+          <span class="frame">
+            {s.src ? <img src={s.src} alt={s.caption} loading="lazy" decoding="async" /> : <span class="ph">{s.file}</span>}
+          </span>
+          <figcaption>{s.caption}</figcaption>
+        </figure>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .label { font: 400 clamp(17px, 1.4vw, 20px)/1.3 var(--display); margin-bottom: 18px; }
+  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; padding: 0; }
+  .shot { margin: 0; display: grid; gap: 10px; }
+  .frame { display: block; aspect-ratio: 1; overflow: hidden; background: #e6e6e6; transition: transform .3s ease; }
+  .frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ph { display: grid; place-items: center; height: 100%; color: var(--grey); font-size: 12px; letter-spacing: .03em; }
+  figcaption { font-size: 13px; line-height: 1.35; color: #888; opacity: 0; transition: opacity .3s ease; }
+  .shot:hover .frame { transform: scale(1.05); }
+  .shot:hover figcaption { opacity: 1; }
+
+  /* Phones and touch screens: captions always on */
+  @media (hover: none) { figcaption { opacity: 1; } }
+  /* Phones: one row that scrolls sideways */
+  @media (max-width: 699px) {
+    .row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; }
+    .row li { flex: 0 0 46vw; scroll-snap-align: start; }
+    figcaption { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) { .frame, figcaption { transition: none; } .shot:hover .frame { transform: none; } }
+</style>

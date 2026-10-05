@@ -1,0 +1,39 @@
+---
+import Glyph from './Glyph.astro';
+import site from '../data/site.json';
+interface Props { current?: string; size?: 'md' | 'lg' }
+const { current = '', size = 'md' } = Astro.props;
+---
+<ul class:list={['index', `index--${size}`]} role="list">
+  {site.nav.map((item) => (
+    <li>
+      <a href={item.href} aria-current={current === item.label ? 'page' : undefined} style={`--c: var(--${item.color}); --ct: var(--${item.color}-text)`}>
+        <span class="k">( {item.label} )</span>
+        <span class="h">
+          <span class="hint">: {item.hint}</span>
+          <Glyph name={item.glyph as any} color={item.color as any} size="0.9em" class="g" />
+        </span>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .index { list-style: none; padding: 0; border-top: 1px dashed var(--ink); }
+  .index li { border-bottom: 1px dashed var(--ink); }
+  .index a {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 14px 0; text-decoration: none;
+  }
+  .k { font: 400 clamp(22px, 1.9vw, 28px)/1 var(--display); color: #4a4a4a; letter-spacing: -0.02em; transition: color .3s var(--ease); }
+  .h { display: inline-flex; align-items: center; gap: 8px; }
+  .hint { font-size: 12px; letter-spacing: .03em; text-transform: uppercase; color: var(--ct); font-weight: 500; white-space: nowrap; }
+  .g { transition: transform .5s var(--ease); }
+  .index a:hover .k, .index a:focus-visible .k, .index a[aria-current='page'] .k { color: var(--ink); }
+  .index a:hover .g, .index a:focus-visible .g { transform: rotate(90deg) scale(1.25); }
+  .index a[aria-current='page'] .k { font-weight: 500; }
+
+  .index--lg a { padding: 20px 0; }
+  .index--lg .k { font-size: clamp(28px, 8vw, 40px); }
+  .index--lg .hint { font-size: 13px; }
+</style>

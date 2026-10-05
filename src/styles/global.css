@@ -1,0 +1,96 @@
+/* ───────── Fonts ───────── */
+/* Violet Sans by Violet Office — SIL Open Font License (public/fonts/violet-sans/OFL.txt) */
+@font-face {
+  font-family: 'Violet Sans';
+  src: url('/fonts/violet-sans/VioletSans-Regular.woff2') format('woff2'),
+       url('/fonts/violet-sans/VioletSans-Regular.woff') format('woff');
+  font-weight: 100 900; /* one weight; used for everything so headings never fake-bold */
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ───────── Tokens ───────── */
+:root {
+  --ink: #0a0a0a;
+  --paper: #ffffff;
+  --grey: #5e5e5e;      /* secondary text, 6.5:1 on white */
+  --rule: #e6e6e6;
+  --soft: #f5f5f4;
+
+  /* Sparks: use for glyphs, one multicolor word, hover states */
+  --tomato: #ff4f1f;
+  --cobalt: #2e5bff;
+  --green:  #19b46a;
+  --pink:   #ff7ac2;
+  --lime:   #c6f24e;    /* fills only, always with black text */
+  /* Text-safe versions for small type (≥ 4.5:1 on white) */
+  --tomato-text: #d23a0b;
+  --cobalt-text: #2449e0;
+  --green-text:  #0b7f47;
+  --pink-text:   #c2338a;
+
+  --display: 'Violet Sans', system-ui, sans-serif;
+  --body: 'Violet Sans', system-ui, sans-serif;
+
+  --sidebar: clamp(280px, 27vw, 380px);
+  --gutter: 16px;
+  --radius: 14px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+}
+@media (min-width: 720px) { :root { --gutter: 32px; } }
+@media (min-width: 1280px) { :root { --gutter: 48px; } }
+
+/* ───────── Base ───────── */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 80px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 16px/1.6 var(--body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; }
+ul[role='list'], ol[role='list'] { list-style: none; padding: 0; }
+h1, h2, h3 { font-family: var(--display); font-weight: 500; letter-spacing: -0.025em; line-height: 1.1; }
+::selection { background: var(--lime); color: var(--ink); }
+
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.skip {
+  position: absolute; left: 12px; top: -60px; z-index: 100;
+  background: var(--ink); color: #fff; padding: 10px 14px; border-radius: 8px; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* multicolor word */
+.multicolor span[aria-hidden] span:nth-child(5n + 1) { color: var(--green); }
+.multicolor span[aria-hidden] span:nth-child(5n + 2) { color: var(--pink); }
+.multicolor span[aria-hidden] span:nth-child(5n + 3) { color: var(--cobalt); }
+.multicolor span[aria-hidden] span:nth-child(5n + 4) { color: var(--tomato); }
+.multicolor span[aria-hidden] span:nth-child(5n + 5) { color: #9a9a9a; }
+.inline-glyph { vertical-align: 0.06em; margin: 0 0.04em; }
+
+/* pills */
+.pill {
+  display: inline-flex; align-items: center; gap: .4em;
+  border: 1px solid currentColor; border-radius: 999px;
+  padding: .32em .85em; font-size: 12px; line-height: 1.2;
+  letter-spacing: .02em; text-transform: uppercase; white-space: nowrap;
+}
+.pill--lime { background: var(--lime); border-color: var(--lime); color: var(--ink); text-decoration: none; }
+
+.eyebrow { font: 500 12px/1.3 var(--body); letter-spacing: .06em; text-transform: uppercase; }
+
+/* ───────── Scroll reveal (only when JS runs + motion allowed) ───────── */
+@media (prefers-reduced-motion: no-preference) {
+  .js .reveal { opacity: 0; transform: translateY(18px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
+  .js .reveal.is-in { opacity: 1; transform: none; }
+  html { scroll-behavior: smooth; }
+}

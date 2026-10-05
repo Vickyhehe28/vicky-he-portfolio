@@ -1,0 +1,56 @@
+---
+/** Small colored shapes — the site's "sparks". Purely decorative (aria-hidden). */
+interface Props {
+  name?: 'star' | 'dot' | 'flower' | 'burst' | 'arch' | 'rolli' | 'cubi';
+  color?: 'tomato' | 'cobalt' | 'green' | 'pink' | 'lime' | 'ink';
+  size?: string;
+  class?: string;
+}
+const { name = 'star', color = 'tomato', size = '0.8em', class: cls = '' } = Astro.props;
+
+// 8-point burst
+const burst = Array.from({ length: 16 }, (_, i) => {
+  const r = i % 2 === 0 ? 12 : 5.2;
+  const a = (Math.PI / 8) * i - Math.PI / 2;
+  return `${(12 + r * Math.cos(a)).toFixed(2)},${(12 + r * Math.sin(a)).toFixed(2)}`;
+}).join(' ');
+---
+<svg
+  class:list={['glyph', cls]}
+  viewBox="0 0 24 24"
+  width={size}
+  height={size}
+  style={`color: var(--${color})`}
+  aria-hidden="true"
+  focusable="false"
+>
+  {name === 'star' && <path d="M12 0C12.9 7.6 16.4 11.1 24 12 16.4 12.9 12.9 16.4 12 24 11.1 16.4 7.6 12.9 0 12 7.6 11.1 11.1 7.6 12 0Z" fill="currentColor" />}
+  {name === 'dot' && <circle cx="12" cy="12" r="10" fill="currentColor" />}
+  {name === 'flower' && (
+    <g fill="currentColor">
+      <circle cx="12" cy="6" r="6" /><circle cx="18" cy="12" r="6" /><circle cx="12" cy="18" r="6" /><circle cx="6" cy="12" r="6" />
+    </g>
+  )}
+  {name === 'burst' && <polygon points={burst} fill="currentColor" />}
+  {name === 'arch' && <path d="M2 22V12a10 10 0 0 1 20 0v10Z" fill="currentColor" />}
+  {name === 'cubi' && (
+    /* Stacked, tilted blocks on a post, after David Smith's Cubi sculptures */
+    <g fill="currentColor">
+      <rect x="4.2" y="2.4" width="6.6" height="6.6" transform="rotate(45 7.5 5.7)" />
+      <rect x="12.8" y="0.6" width="5.4" height="9.8" />
+      <rect x="4" y="10.4" width="15.4" height="3" />
+      <rect x="10.3" y="13.4" width="2.8" height="10.6" />
+    </g>
+  )}
+  {name === 'rolli' && (
+    /* Outlined four-petal flower with two dots, after the Rolli Bakehouse logo */
+    <g>
+      <path d="M7.03 7.03A5 5 0 1 1 16.97 7.03A5 5 0 1 1 16.97 16.97A5 5 0 1 1 7.03 16.97A5 5 0 1 1 7.03 7.03Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+      <circle cx="10.4" cy="12.4" r="1.15" fill="currentColor" /><circle cx="13.6" cy="12.4" r="1.15" fill="currentColor" />
+    </g>
+  )}
+</svg>
+
+<style>
+  .glyph { display: inline-block; flex: none; vertical-align: -0.08em; }
+</style>

@@ -1,0 +1,116 @@
+---
+/**
+ * Photography wall: every photo from every series in one masonry grid.
+ * layout="book" instead shows book spreads: the first two side by side, the rest in rows of three.
+ * Clicking a photo opens it full screen; click the dark area (or press Esc) to close,
+ * arrow keys or a swipe move between photos.
+ */
+interface Photo { src: string; alt: string; w?: number; h?: number; title: string; caption: string; series: string; seriesTitle: string }
+interface Series { id: string; title: string; theme: string; intro?: string }
+interface Props { photos: Photo[]; series: Series[]; layout?: 'wall' | 'book' }
+const { photos, layout = 'wall' } = Astro.props;
+// Book layout: a lone spread left over in the last row of three sits centred at the larger size
+const lone = layout === 'book' && (photos.length - 2) % 3 === 1;
+---
+<section class="wall" data-wall data-layout={layout}>
+  <div class:list={['grid', { book: layout === 'book' }]} data-grid>
+    {photos.map((p, i) => (
+      <div class:list={['tile', { lead: layout === 'book' && i < 2, end: lone && i === photos.length - 1 }]} data-ratio={p.w && p.h ? p.h / p.w : 1.25}>
+        <button type="button" class="open" data-open={i} aria-label={`View photo ${i + 1}`}>
+          <img src={p.src} alt={p.alt} width={p.w} height={p.h} loading={i < 12 ? 'eager' : 'lazy'} decoding="async" />
+        </button>
+      </div>
+    ))}
+  </div>
+
+  <dialog class="viewer" data-viewer aria-label="Photo viewer (press Escape or click outside the photo to close)">
+    <figure class="v-fig"><img data-vimg alt="" /></figure>
+  </dialog>
+
+  <script type="application/json" data-photos set:html={JSON.stringify(photos.map((p) => ({ src: p.src, alt: p.alt })))}></script>
+</section>
+
+<style>
+  .wall { padding: 0 var(--gutter); }
+
+  /* Masonry: photos keep their own shape. The script deals them left to right into the
+     shortest column, so the first photos in the list sit along the top. */
+  .grid { display: flex; gap: 12px; align-items: flex-start; }
+  .grid :global(.col) { flex: 1; min-width: 0; display: grid; gap: 12px; }
+  /* Book: 12-column grid. Two spreads per row to start, then three; one column on phones */
+  .grid.book { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  /* Faint outline so white book pages don't melt into the white page */
+  .grid.book .open { box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 10px 24px -18px rgba(0, 0, 0, .25); }
+  @media (min-width: 900px) {
+    .grid.book { grid-template-columns: repeat(12, 1fr); }
+    .grid.book .tile { grid-column: span 4; }
+    .grid.book .tile.lead { grid-column: span 6; }
+    .grid.book .tile.end { grid-column: 4 / span 6; }
+  }
+  .open { display: block; width: 100%; padding: 0; border: 0; background: var(--soft); border-radius: var(--radius); overflow: hidden; cursor: zoom-in; }
+  .open img { width: 100%; height: auto; display: block; }
+
+  /* Full-screen viewer */
+  .viewer {
+    width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0;
+    background: rgba(12,12,12,.94); cursor: zoom-out;
+  }
+  .viewer[open] { display: grid; place-items: center; }
+  .viewer::backdrop { background: rgba(0,0,0,.6); }
+  .v-fig { margin: 0; padding: 48px 24px; display: grid; place-items: center; }
+  .v-fig img { max-width: 100%; max-height: calc(100svh - 96px); object-fit: contain; border-radius: 10px; cursor: default; }
+  @media (prefers-reduced-motion: no-preference) {
+    .viewer[open] .v-fig img { animation: pop .45s var(--ease); }
+    @keyframes pop { from { opacity: 0; transform: scale(.96); } }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-wall]').forEach((wall) => {
+    const photos: { src: string; alt: string }[] = JSON.parse(wall.querySelector('[data-photos]')!.textContent || '[]');
+    // Masonry layout (wall only): 1 / 2 / 3 columns, each tile goes into the currently shortest column
+    const grid = wall.querySelector<HTMLElement>('[data-grid]')!;
+    const tiles = [...grid.querySelectorAll<HTMLElement>('.tile')];
+    let cols = 0;
+    const layout = () => {
+      const n = innerWidth >= 1024 ? 3 : innerWidth >= 700 ? 2 : 1;
+      if (n === cols) return;
+      cols = n;
+      const columns = Array.from({ length: n }, () => Object.assign(document.createElement('div'), { className: 'col' }));
+      const heights = new Array(n).fill(0);
+      tiles.forEach((t) => {
+        const k = heights.indexOf(Math.min(...heights));
+        columns[k].append(t);
+        heights[k] += Number(t.dataset.ratio) + 0.05;
+      });
+      grid.replaceChildren(...columns);
+    };
+    if (wall.dataset.layout !== 'book') {
+      layout();
+      addEventListener('resize', layout);
+    }
+
+    const viewer = wall.querySelector<HTMLDialogElement>('[data-viewer]')!;
+    const img = viewer.querySelector<HTMLImageElement>('[data-vimg]')!;
+    let current = 0;
+    const show = (i: number) => {
+      current = (i + photos.length) % photos.length;
+      img.src = photos[current].src; img.alt = photos[current].alt;
+    };
+
+    wall.querySelectorAll<HTMLElement>('[data-open]').forEach((el) => el.addEventListener('click', () => {
+      show(Number(el.dataset.open)); viewer.showModal();
+    }));
+    // Click anywhere except the photo itself to close
+    viewer.addEventListener('click', (e) => { if (e.target !== img) viewer.close(); });
+    viewer.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') show(current + 1); if (e.key === 'ArrowLeft') show(current - 1); });
+    // Swipe left/right on touch screens
+    let x0: number | null = null;
+    viewer.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+    viewer.addEventListener('touchend', (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 40) show(current + (dx < 0 ? 1 : -1));
+    });
+  });
+</script>

@@ -1,0 +1,58 @@
+---
+/**
+ * Vertical (9:16) reels. A reel with a `video` plays muted on hover / when tapped;
+ * a reel without one shows a placeholder tile until the real file is added.
+ */
+import Glyph from './Glyph.astro';
+interface Item { title: string; video?: string; poster?: ImageMetadata }
+interface Props { title: string; intro?: string; items: Item[]; color?: any }
+const { title, intro, items, color = 'tomato' } = Astro.props;
+---
+<section class="reels reveal" aria-labelledby="reels-h">
+  <div class="r-head">
+    <h2 class="r-title" id="reels-h">{title}</h2>
+    {intro && <p class="r-intro">{intro}</p>}
+  </div>
+  <ul class="r-grid" role="list">
+    {items.map((r) => (
+      <li class="reel">
+        {r.video ? (
+          <video src={r.video} poster={r.poster?.src} muted loop playsinline preload="metadata" controls aria-label={r.title} data-reel></video>
+        ) : (
+          <div class="ph" role="img" aria-label={`${r.title} (coming soon)`}>
+            <span class="play" aria-hidden="true"><Glyph name="dot" color={color} size="12px" /></span>
+            <span class="ph-t">{r.title}</span>
+          </div>
+        )}
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .reels { padding-top: 120px; }
+  .r-head { display: grid; gap: 10px; margin-bottom: 24px; }
+  .r-title { font: 400 clamp(28px, 3.4vw, 48px)/1.1 var(--display); letter-spacing: -0.03em; }
+  .r-intro { color: var(--grey); font-size: 15px; }
+  .r-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0; }
+  @media (min-width: 700px) { .r-grid { grid-template-columns: repeat(4, 1fr); } }
+  .reel video, .ph { width: 100%; aspect-ratio: 9 / 16; border-radius: var(--radius); display: block; object-fit: cover; background: var(--ink); }
+  .ph {
+    position: relative; display: flex; align-items: end; padding: 14px;
+    background: linear-gradient(160deg, #2a2a2a, #0a0a0a);
+    color: #fff;
+  }
+  .play {
+    position: absolute; inset: 0; margin: auto; width: 54px; height: 54px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.7); display: grid; place-items: center;
+  }
+  .ph-t { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; opacity: .85; }
+</style>
+
+<script>
+  // Play on hover (mouse) — tapping uses the built-in controls
+  document.querySelectorAll<HTMLVideoElement>('[data-reel]').forEach((v) => {
+    v.addEventListener('mouseenter', () => { v.play().catch(() => {}); });
+    v.addEventListener('mouseleave', () => v.pause());
+  });
+</script>

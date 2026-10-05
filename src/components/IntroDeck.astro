@@ -1,0 +1,220 @@
+---
+/**
+ * Homepage intro with a scroll-driven image deck.
+ * When motion is allowed (any screen size): the intro sentence shows first;
+ * scrolling swaps it for the image stack, flips through it like a flipbook, and
+ * after the last photo the page continues to "selected work".
+ * Reduced-motion visitors get the sentence and a still stack.
+ * Images come from `introImages` in src/data/site.json.
+ */
+import Glyph from './Glyph.astro';
+import RichLine from './RichLine.astro';
+import site from '../data/site.json';
+
+const images: string[] = site.introImages ?? [];
+// "connect" hover: where each nav glyph settles around the headline (% of the headline box)
+// and how far it drifts in from (px)
+const constellation = [
+  { glyph: 'flower', color: 'green', x: -6, y: -18, fx: -28, fy: -20 },
+  { glyph: 'star', color: 'tomato', x: 104, y: -12, fx: 28, fy: -20 },
+  { glyph: 'dot', color: 'cobalt', x: 103, y: 104, fx: 28, fy: 20 },
+  { glyph: 'burst', color: 'pink', x: -4, y: 100, fx: -28, fy: 20 },
+] as const;
+---
+<section class="intro" data-intro>
+  <div class="stage" data-stage>
+    <p class="cue" aria-hidden="true">scroll to explore</p>
+
+    <div class="copy" data-copy>
+      <div class="line-wrap" data-constellation>
+        <h1 class="line"><RichLine text={site.intro} /></h1>
+        {constellation.map((c, i) => (
+          <span class="cg" aria-hidden="true" style={`--x:${c.x}%; --y:${c.y}%; --fx:${c.fx}px; --fy:${c.fy}px`}>
+            <span class="bob" style={`--delay:${-i * 0.7}s`}><Glyph name={c.glyph} color={c.color} size="clamp(18px, 1.8vw, 28px)" /></span>
+          </span>
+        ))}
+      </div>
+      {site.introGlyph && <Glyph name={site.introGlyph as any} color="green" size="46px" class="line-g" />}
+      <p class="role">{site.name} <Glyph name="dot" color="cobalt" size="8px" /> {site.role}</p>
+    </div>
+
+    <div class="deck" data-deck aria-hidden="true">
+      {images.map((src, i) => (
+        <figure class="card" data-card style={`--d:${i}`}>
+          <img src={src} alt="" width="1200" height="750" loading={i < 5 ? 'eager' : 'lazy'} decoding="async" />
+        </figure>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .intro { position: relative; }
+  .stage {
+    min-height: calc(100svh - 60px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 48px; padding: 48px var(--gutter); text-align: center; position: relative;
+  }
+  .cue { display: none; }
+
+  .copy { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  .line {
+    font: 500 clamp(34px, 4vw, 60px)/1.08 var(--display); letter-spacing: -0.035em;
+    max-width: 22ch; text-wrap: balance;
+  }
+  /* "connect": the interactive word, plus the glyphs that drift in around the headline */
+  .line-wrap { position: relative; }
+  .line :global(.hot) {
+    pointer-events: auto; cursor: default;
+    text-decoration: underline dashed 2px; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+    text-underline-offset: .14em; transition: text-decoration-color .3s;
+  }
+  .line :global(.hot:hover), .line :global(.hot:focus-visible) { text-decoration-color: currentColor; outline: none; }
+  .cg {
+    position: absolute; left: var(--x); top: var(--y); width: 0; height: 0; display: grid; place-items: center;
+    opacity: 0; transform: translate(var(--fx), var(--fy)) scale(.75) rotate(-20deg); pointer-events: none;
+    transition: transform .8s cubic-bezier(.2, .8, .2, 1), opacity .6s ease;
+  }
+  .line-wrap.is-on .cg { opacity: 1; transform: none; }
+  /* Gentle float in place while showing */
+  .bob { display: grid; place-items: center; }
+  .line-wrap.is-on .bob { animation: bob 3.2s ease-in-out var(--delay) infinite; }
+  @keyframes bob { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-5px) rotate(6deg); } }
+  @media (prefers-reduced-motion: reduce) { .cg { transition: opacity .3s; transform: none; } .line-wrap.is-on .bob { animation: none; } }
+
+  .role { color: var(--grey); font-size: 15px; display: inline-flex; align-items: center; gap: 8px; }
+
+  /* The stack: card 0 in front, the next few peek out above it */
+  .deck {
+    position: relative; width: min(560px, 82vw); aspect-ratio: 16 / 10;
+    margin-top: 24px;
+  }
+  .card {
+    position: absolute; inset: 0; margin: 0;
+    border-radius: var(--radius); overflow: hidden; background: var(--soft);
+    box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 18px 40px -24px rgba(0,0,0,.35);
+    transform-origin: 50% 0%;
+    transform: translateY(calc(var(--d) * -12px)) scale(calc(1 - var(--d) * 0.04));
+    z-index: calc(100 - var(--d));
+    opacity: clamp(0, calc(4 - var(--d)), 1);
+    will-change: transform, opacity, filter;
+  }
+  .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  /* Animated mode (added by the script): the sentence and the deck share the
+     same spot; the sentence shows first, the deck takes over on scroll */
+  .intro.is-animated .copy { position: absolute; inset: 0; justify-content: center; padding: 0 var(--gutter); pointer-events: none; }
+  .intro.is-animated .deck { width: min(560px, 86vw); margin: 0; }
+
+  @media (min-width: 1024px) {
+    .stage { min-height: 100svh; gap: 40px; }
+    .cue {
+      display: block; position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+      font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+    }
+    .cue::after { content: ''; display: block; width: 1px; height: 44px; background: var(--ink); margin: 10px auto 0; }
+    .deck { width: clamp(320px, 34vw, 560px); margin-top: 8px; }
+    .intro.is-animated .deck { width: clamp(360px, 46vw, 700px); }
+    @media (prefers-reduced-motion: no-preference) {
+      .cue::after { transform-origin: top; animation: cue 2.4s var(--ease) infinite; }
+      @keyframes cue { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+  // Phones resize the viewport when the address bar hides; don't re-measure for that
+  ScrollTrigger.config({ ignoreMobileResize: true });
+
+  const root = document.querySelector<HTMLElement>('[data-intro]');
+  const stage = root?.querySelector<HTMLElement>('[data-stage]');
+  const copy = root?.querySelector<HTMLElement>('[data-copy]');
+  const deck = root?.querySelector<HTMLElement>('[data-deck]');
+  const cue = root?.querySelector<HTMLElement>('.cue');
+  const cards = root ? Array.from(root.querySelectorAll<HTMLElement>('[data-card]')) : [];
+
+  // Lay out every card for a given flip position `f` (0 = first card in front,
+  // cards.length - 1 = last card in front). Fractions mean "mid-flip".
+  const render = (f: number) => {
+    cards.forEach((card, i) => {
+      const d = i - f; // distance from the front slot
+      let y = 0, s = 1, o = 1, b = 0;
+      if (d < -1) { o = 0; }
+      else if (d < 0) {
+        // Leaving: blur, drift down, fade — the "flipbook" smear from the reference
+        const t = -d;
+        y = 36 * t; s = 1 + 0.06 * t; o = 1 - t; b = 14 * t;
+      } else {
+        y = -12 * d; s = 1 - 0.04 * d; o = Math.max(0, Math.min(1, 4 - d));
+        b = Math.min(d, 1) * 2 * Math.max(0, 1 - d); // slight softness while arriving
+      }
+      card.style.transform = `translateY(${y}px) scale(${s})`;
+      card.style.opacity = String(o);
+      card.style.filter = b > 0.05 ? `blur(${b.toFixed(2)}px)` : 'none';
+      card.style.zIndex = String(100 - i);
+    });
+  };
+
+  const mm = gsap.matchMedia();
+  mm.add('(prefers-reduced-motion: no-preference)', () => {
+    if (!root || !stage || !copy || !deck || cards.length < 2) return;
+
+    const state = { f: 0 };
+    const flips = cards.length - 1;
+    const tl = gsap.timeline({
+      defaults: { ease: 'none' },
+      scrollTrigger: {
+        trigger: root,
+        // Below 1024px the sticky top bar covers the top of the screen, so pin under it
+        start: () => `top top+=${document.querySelector<HTMLElement>('.top')?.offsetHeight ?? 0}`,
+        end: () => `+=${flips * 90 + window.innerHeight * 0.6}`,
+        pin: stage,
+        scrub: 0.5,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+      },
+    });
+
+    root.classList.add('is-animated');
+    gsap.set(deck, { autoAlpha: 0, scale: 0.94 });
+
+    // 1) The sentence shows first; as you start scrolling it gives way to the stack
+    tl.to(copy, { autoAlpha: 0, y: -30, duration: 2 });
+    if (cue) tl.to(cue, { autoAlpha: 0, duration: 1.5 }, '<');
+    tl.to(deck, { autoAlpha: 1, scale: 1, duration: 2 }, '<0.6');
+    // 2) Flip through every image; after the last one the page moves on to "selected work"
+    tl.to(state, { f: flips, duration: flips, onUpdate: () => render(state.f) }, '>');
+    tl.to({}, { duration: 0.6 });
+
+    render(0);
+    return () => {
+      root.classList.remove('is-animated');
+      cards.forEach((c) => { c.style.cssText = c.style.cssText.replace(/(transform|opacity|filter|z-index):[^;]+;?/g, ''); });
+      gsap.set([copy, deck, cue].filter(Boolean), { clearProps: 'all' });
+    };
+  });
+
+  // "connect" hover: the glyphs drift in around the headline and float gently; they fade out on leave
+  const wrap = document.querySelector<HTMLElement>('[data-constellation]');
+  const hot = wrap?.querySelector<HTMLElement>('[data-hot]');
+  if (wrap && hot) {
+    const on = () => wrap.classList.add('is-on');
+    const off = () => wrap.classList.remove('is-on');
+    hot.addEventListener('mouseenter', on);
+    hot.addEventListener('mouseleave', off);
+    hot.addEventListener('focus', on);
+    hot.addEventListener('blur', off);
+    // Phones (no hover): play it once after the page loads
+    if (matchMedia('(hover: none)').matches) {
+      setTimeout(on, 700);
+      setTimeout(off, 3600);
+    }
+  }
+
+  // Images load late (picsum); keep pin measurements honest
+  window.addEventListener('load', () => ScrollTrigger.refresh());
+</script>

@@ -1,0 +1,68 @@
+---
+/**
+ * About-page portrait: a cut-out photo on a light grey 4:5 frame. Hovering (or tapping on phones) slides a
+ * second colour photo out from behind it like a polaroid. Drop the photos into public/about/:
+ *   about-portrait.jpg  main photo (cut-out on white; the white blends into the grey frame)
+ *   about-bread.jpg     the polaroid
+ * Until a file is there, a grey placeholder shows in its place.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+
+const has = (f: string) => fs.existsSync(path.join(process.cwd(), 'public/about', f));
+const main = has('about-portrait.jpg') ? '/about/about-portrait.jpg' : null;
+const pop = has('about-bread.jpg') ? '/about/about-bread.jpg' : null;
+---
+<button type="button" class="pf" aria-pressed="false" aria-label="Portrait of Vicky He. Tap to show another photo" data-polaroid>
+  <span class="pol" aria-hidden="true">
+    {pop ? <img src={pop} alt="" loading="lazy" decoding="async" /> : <span class="ph">about-bread.jpg</span>}
+    <span class="cap">fresh out of the oven</span>
+  </span>
+  <span class="main">
+    {main ? <img src={main} alt="Portrait of Vicky He, smiling with arms crossed" loading="eager" decoding="async" /> : <span class="ph">about-portrait.jpg</span>}
+  </span>
+</button>
+
+<style>
+  .pf { position: relative; display: block; width: 100%; aspect-ratio: 4 / 5; padding: 0; border: 0; background: none; cursor: pointer; }
+  .main, .pol { position: absolute; display: block; }
+  .main { inset: 0; z-index: 2; overflow: hidden; background: #ededed; }
+  /* Slightly enlarged and anchored to the top, so the frame's bottom edge cuts through the crossed arms */
+  .main img { position: absolute; top: 0; left: -5%; width: 110%; max-width: none; height: auto; display: block; mix-blend-mode: multiply; }
+
+  /* Polaroid: white frame, thicker at the bottom, tucked behind the main photo */
+  .pol {
+    z-index: 1; top: 10%; left: 12%; width: 76%;
+    padding: 8px 8px 34px; background: #fff;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .18), 0 2px 6px rgba(0, 0, 0, .08);
+    transform: translate(0, 0) rotate(0deg);
+    transition: transform .3s ease, z-index 0s .15s;
+  }
+  .pol img, .pol .ph { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+  /* Handwritten note on the thick bottom border */
+  .cap {
+    position: absolute; left: 0; right: 0; bottom: 7px; text-align: center; color: #444;
+    font: 400 17px/1 'Bradley Hand', 'Segoe Print', 'Marker Felt', 'Comic Sans MS', cursive; transform: rotate(-1.5deg);
+  }
+  .ph { display: grid; place-items: center; background: #e6e6e6; color: var(--grey); font-size: 12px; letter-spacing: .03em; }
+  .main .ph { width: 100%; height: 100%; }
+
+  /* Slides out to the upper left (so it never runs off the page edge), then comes to the front
+     halfway through so the whole photo shows */
+  @media (hover: hover) {
+    .pf:hover .pol { transform: translate(-58%, -8%) rotate(-6deg); z-index: 3; }
+  }
+  .pf[aria-pressed='true'] .pol { transform: translate(-58%, -8%) rotate(-6deg); z-index: 3; }
+  .pf:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+</style>
+
+<script>
+  // Phones and tablets: tap to show / hide the polaroid
+  // (with a mouse, hover does the job, so a click doesn't lock it open)
+  const touch = matchMedia('(hover: none)');
+  document.querySelectorAll<HTMLButtonElement>('[data-polaroid]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (touch.matches) btn.setAttribute('aria-pressed', String(btn.getAttribute('aria-pressed') !== 'true'));
+    });
+  });
+</script>

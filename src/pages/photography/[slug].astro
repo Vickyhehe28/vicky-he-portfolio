@@ -1,0 +1,77 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PhotoWall from '../../components/PhotoWall.astro';
+import BlinkIntro from '../../components/BlinkIntro.astro';
+import { seriesPhotos } from '../../lib/series';
+
+export async function getStaticPaths() {
+  const series = await getCollection('series', ({ data }) => data.featured && !data.wall);
+  return series.map((s) => ({ params: { slug: s.id }, props: { s } }));
+}
+const { s } = Astro.props as { s: CollectionEntry<'series'> };
+const hero = s.data.layout === 'book' ? s.data.hero : undefined;
+const coverHero = hero && s.data.heroStyle === 'cover';
+---
+<Base title={s.data.title} current="photography">
+  {s.data.opening === 'blink' && <BlinkIntro />}
+  {coverHero ? (
+    <>
+      <!-- Whole cover centred, title and subtitle below -->
+      <header class="cover">
+        <a class="back" href="/photography/#series">← ( photo series )</a>
+        <img src={hero} alt={s.data.coverAlt} loading="eager" decoding="async" />
+        <h1 class="cover-title">{s.data.title}</h1>
+        {s.data.intro && <p class="cover-sub">{s.data.intro}</p>}
+      </header>
+    </>
+  ) : hero ? (
+    <>
+      <!-- Book series: big photo with the title over it -->
+      <header class="hero">
+        <img src={hero} alt="" loading="eager" decoding="async" />
+        <a class="back back--light" href="/photography/#series">← ( photo series )</a>
+        <h1 class="hero-title">{s.data.title}</h1>
+      </header>
+      <div class="s-head s-head--after">
+        <p class="s-theme">{s.data.theme}</p>
+        {s.data.intro && <p class="s-intro">{s.data.intro}</p>}
+      </div>
+    </>
+  ) : (
+    <header class="s-head">
+      <a class="back" href="/photography/#series">← ( photo series )</a>
+      <h1 class="s-title">{s.data.title}</h1>
+      <p class="s-theme">{s.data.theme}</p>
+      {s.data.intro && <p class="s-intro">{s.data.intro}</p>}
+    </header>
+  )}
+  <PhotoWall photos={seriesPhotos(s)} series={[]} layout={s.data.layout} />
+</Base>
+
+<style>
+  .s-head { padding: 56px var(--gutter) 32px; display: grid; gap: 12px; }
+  .s-head--after { padding-top: 32px; }
+  .back { font-size: 13px; letter-spacing: .03em; color: var(--grey); text-decoration: none; justify-self: start; }
+  .back:hover { color: var(--ink); }
+  .s-title { font: 400 clamp(32px, 4vw, 56px)/1.05 var(--display); letter-spacing: -0.02em; margin-top: 12px; }
+  .s-theme { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--grey); }
+  .s-intro { font: 400 clamp(18px, 1.6vw, 22px)/1.4 var(--display); max-width: 50ch; }
+
+  .cover { min-height: calc(100svh - 60px); padding: 28px var(--gutter) 48px; display: grid; justify-items: center; align-content: center; gap: 14px; text-align: center; }
+  .cover .back { justify-self: start; align-self: start; }
+  .cover img { width: auto; max-width: min(100%, 520px); max-height: 66svh; margin-top: 12px; box-shadow: 0 18px 40px -26px rgba(0,0,0,.35); }
+  .cover-title { margin-top: 18px; font: 400 clamp(32px, 4vw, 56px)/1.05 var(--display); letter-spacing: -0.02em; }
+  .cover-sub { font-size: clamp(15px, 1.2vw, 17px); color: var(--grey); }
+  @media (min-width: 1024px) { .cover { min-height: 100svh; } }
+
+  .hero { position: relative; margin: 0; }
+  .hero img { display: block; width: 100%; height: min(78svh, 62vw); object-fit: cover; }
+  .hero::after { content: ''; position: absolute; inset: 0 0 auto; height: 40%; background: linear-gradient(rgba(0,0,0,.35), transparent); pointer-events: none; }
+  .back--light { position: absolute; z-index: 1; top: 20px; left: var(--gutter); color: rgba(255,255,255,.85); }
+  .back--light:hover { color: #fff; }
+  .hero-title {
+    position: absolute; z-index: 1; top: clamp(48px, 7vw, 88px); right: var(--gutter); margin: 0; color: #fff; text-align: right;
+    font: 400 clamp(28px, 3.6vw, 52px)/1.05 var(--display); letter-spacing: -0.02em;
+  }
+</style>

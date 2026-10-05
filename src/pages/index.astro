@@ -1,0 +1,46 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import NavIndex from '../components/NavIndex.astro';
+import IntroDeck from '../components/IntroDeck.astro';
+
+const projects = (await getCollection('projects', ({ data }) => data.featured)).map((p) => ({
+  key: `p-${p.id}`, order: p.data.order, href: `/work/${p.id}/`, title: p.data.title, tags: p.data.tags,
+  image: p.data.cover, video: p.data.coverSrc, alt: p.data.coverAlt, glyph: p.data.glyph, color: p.data.color,
+}));
+// Selected work is design only; photography lives on its own page
+const work = projects.sort((a, b) => a.order - b.order);
+---
+<Base current="design">
+  <IntroDeck />
+
+  <nav class="mobile-index" aria-label="Sections">
+    <NavIndex current="design" />
+  </nav>
+
+  <section id="work" class="work" aria-labelledby="work-h">
+    <div class="work-head">
+      <h2 id="work-h" class="eyebrow">( selected work )</h2>
+      <span class="eyebrow count">{String(work.length).padStart(2, '0')}</span>
+    </div>
+    <div class="grid">
+      {work.map((w, i) => (
+        <ProjectCard {...w} priority={i < 2} />
+      ))}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .mobile-index { padding: 0 var(--gutter) 72px; }
+
+  .work { padding: 0 var(--gutter); }
+  .work-head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 14px; margin-bottom: 24px; border-bottom: 1px solid var(--ink); }
+  .count { color: var(--grey); }
+  /* One project per row, as wide as the list */
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px; }
+
+  @media (min-width: 700px) { .grid { gap: 56px; } }
+  @media (min-width: 1024px) { .mobile-index { display: none; } }
+</style>

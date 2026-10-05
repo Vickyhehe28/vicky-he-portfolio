@@ -1,0 +1,46 @@
+---
+/**
+ * The "Vicky He" wordmark. The last letter rolls out to the right as four copies,
+ * pauses, then rolls back into place, on a loop (from vicky-he-rolling-e.html).
+ */
+import site from '../data/site.json';
+const [first, second] = site.logo;
+const head = `${first} ${second.slice(0, -1)}`;
+const last = second.slice(-1);
+---
+<span class="roll">{head}<span class="e">{last}{[1, 2, 3, 4].map((i) => <span class="ghost" style={`--i:${i}`} aria-hidden="true">{last}</span>)}</span></span>
+
+<style>
+  .roll {
+    --adv: 0.56em;   /* distance between rolled letters */
+    --speed: 4s;     /* one full loop */
+    white-space: nowrap;
+  }
+  .e { position: relative; display: inline-block; }
+  .ghost {
+    position: absolute; left: 0; top: 0;
+    display: inline-block;
+    transform-origin: 50% 57%;  /* centre of the "e" */
+    opacity: 0;
+    animation: roll var(--speed) infinite;
+    pointer-events: none;
+  }
+
+  /* 0–18% roll out · 18–32% hold · 32–44% roll back · rest: plain name */
+  @keyframes roll {
+    0%   { transform: none; opacity: 1; filter: blur(0); animation-timing-function: cubic-bezier(.65,0,.35,1); }
+    9%   { filter: blur(calc(var(--i) * 0.6px)); }
+    18%, 32% {
+      transform: translateX(calc(var(--i) * var(--adv))) rotate(calc(var(--i) * 90deg));
+      opacity: 1; filter: blur(0);
+      animation-timing-function: cubic-bezier(.65,0,.35,1);
+    }
+    38%  { filter: blur(calc(var(--i) * 0.6px)); }
+    44%  { transform: none; opacity: 1; filter: blur(0); }
+    44.1%, 100% { transform: none; opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ghost { animation: none; }
+  }
+</style>

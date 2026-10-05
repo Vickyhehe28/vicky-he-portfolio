@@ -1,0 +1,28 @@
+---
+/** A row of words that drifts across the page, separated by a glyph. Decorative. */
+import Glyph from './Glyph.astro';
+interface Props { words: string[]; glyph?: any; color?: any }
+const { words, glyph = 'flower', color = 'green' } = Astro.props;
+---
+<div class="marquee" aria-hidden="true">
+  <div class="track">
+    {[0, 1].map(() => (
+      <span class="run">
+        {words.map((w) => (<><span class="w">{w}</span><Glyph name={glyph} color={color} size="28px" class="mg" /></>))}
+      </span>
+    ))}
+  </div>
+</div>
+<p class="sr-only">{words.join(', ')}</p>
+
+<style>
+  .marquee { overflow: hidden; margin: 96px calc(var(--gutter) * -1) 0; padding: 12px 0; }
+  .track { display: flex; width: max-content; }
+  .run { display: flex; align-items: center; flex: none; }
+  .w { font: 400 clamp(36px, 5vw, 72px)/1 var(--display); letter-spacing: -0.03em; padding: 0 .35em; white-space: nowrap; }
+  .run :global(.mg) { flex: none; }
+  @media (prefers-reduced-motion: no-preference) {
+    .track { animation: drift 28s linear infinite; }
+    @keyframes drift { to { transform: translateX(-50%); } }
+  }
+</style>

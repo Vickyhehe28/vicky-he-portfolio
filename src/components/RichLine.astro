@@ -1,0 +1,22 @@
+---
+/**
+ * Renders a line of text from site.json with three tiny bits of syntax:
+ *   {star} {dot} {flower} {burst} {arch}  → inserts a colored glyph
+ *   *word*                                → sets that word letter-by-letter in the spark colors
+ *   [word]                                → marks the interactive word (the homepage "connect" hover)
+ */
+import Glyph from './Glyph.astro';
+interface Props { text: string }
+const { text } = Astro.props;
+const glyphColors: Record<string, any> = { star: 'tomato', dot: 'cobalt', flower: 'green', burst: 'pink', arch: 'tomato' };
+const parts = text.split(/(\{\w+\}|\*[^*]+\*|\[[^\]]+\])/g).filter(Boolean);
+---
+{parts.map((p) => {
+  const g = p.match(/^\{(\w+)\}$/);
+  if (g) return <Glyph name={g[1] as any} color={glyphColors[g[1]] ?? 'tomato'} size="0.62em" class="inline-glyph" />;
+  const w = p.match(/^\*([^*]+)\*$/);
+  if (w) return <span class="multicolor"><span class="sr-only">{w[1]}</span><span aria-hidden="true">{[...w[1]].map((ch) => <span>{ch}</span>)}</span></span>;
+  const h = p.match(/^\[([^\]]+)\]$/);
+  if (h) return <span class="hot" data-hot tabindex="0">{h[1]}</span>;
+  return p;
+})}
