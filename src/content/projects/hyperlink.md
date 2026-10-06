@@ -42,7 +42,7 @@ applications:
   - { image: ../../assets/projects/hyperlink/app-mint.jpg, alt: "Hyperlink app in the calm Dusty Mint theme on a laptop", size: half }
   - { image: ../../assets/projects/hyperlink/app-dark-coral.jpg, alt: "Hyperlink app in dark mode on a laptop, on a soft coral background", size: half }
   - { image: ../../assets/projects/hyperlink/app-dark.jpg, alt: "Hyperlink app in dark mode on a laptop, on a soft mint background", size: half }
-  - { src: /projects/hyperlink/features.mov, alt: "Animated feature cards: Sync, Focus and Tap", size: full }
+  - { src: /projects/hyperlink/features.mp4, alt: "Animated feature cards: Sync, Focus and Tap", size: full }
   - { image: ../../assets/projects/hyperlink/social-stories.jpg, alt: "Three Hyperlink social media stories with landscape photos and short product messages", size: full }
 
 results:

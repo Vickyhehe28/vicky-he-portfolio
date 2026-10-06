@@ -36,7 +36,7 @@ applications:
   - { src: /projects/rolli/flower-mascot.gif, alt: "Animated Rolli flower mascot walking over a tray of cookies", size: half, aspect: "4 / 5" }
   - { image: ../../assets/projects/rolli/shopping-bag.jpg, alt: "Hands holding a Rolli Bakehouse paper shopping bag with the orange logo", size: half, aspect: "4 / 5" }
   - { image: ../../assets/projects/rolli/business-cards.jpg, alt: "Rolli Bakehouse business cards, front and back, on whipped cream", size: full }
-  - { src: /projects/rolli/sticker-tee.mov, alt: "Animated Rolli stickers on a cake roll, beside a model wearing a Rolli T-shirt", size: full }
+  - { src: /projects/rolli/sticker-tee.mp4, alt: "Animated Rolli stickers on a cake roll, beside a model wearing a Rolli T-shirt", size: full }
   - { image: ../../assets/projects/rolli/tote-stamp-cards.jpg, alt: "Have a Rolli Day tote bag and Rolli stamp loyalty cards", size: full }
   - { src: /projects/rolli/website.gif, alt: "Animated Rolli Bakehouse website shown on a laptop and as page layouts", size: full }
   - { image: ../../assets/projects/rolli/instagram.jpg, alt: "Rolli Bakehouse Instagram grid and profile on a phone", size: full }

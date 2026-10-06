@@ -22,10 +22,10 @@ const { current = '', size = 'md' } = Astro.props;
   .index { list-style: none; padding: 0; border-top: 1px dashed var(--ink); }
   .index li { border-bottom: 1px dashed var(--ink); }
   .index a {
-    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px;
     padding: 14px 0; text-decoration: none;
   }
-  .k { font: 400 clamp(22px, 1.9vw, 28px)/1 var(--display); color: #4a4a4a; letter-spacing: -0.02em; transition: color .3s var(--ease); }
+  .k { font: 400 clamp(17px, 1.75vw, 28px)/1 var(--display); white-space: nowrap; color: #4a4a4a; letter-spacing: -0.02em; transition: color .3s var(--ease); }
   .h { display: inline-flex; align-items: center; gap: 8px; }
   .hint { font-size: 12px; letter-spacing: .03em; text-transform: uppercase; color: var(--ct); font-weight: 500; white-space: nowrap; }
   .g { transition: transform .5s var(--ease); }

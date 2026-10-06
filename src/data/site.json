@@ -58,6 +58,13 @@
       "hint": "things I saw",
       "color": "cobalt",
       "glyph": "dot"
+    },
+    {
+      "label": "playground",
+      "href": "/playground/",
+      "hint": "just for fun",
+      "color": "pink",
+      "glyph": "burst"
     }
   ]
 }

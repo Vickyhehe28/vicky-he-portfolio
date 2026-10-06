@@ -109,6 +109,23 @@ const year = new Date().getFullYear();
       }, 2400);
     }
 
+    // Videos: make sure every looping video is muted + inline (required for autoplay on phones).
+    // Phones in power-saving mode block autoplay, so the first tap anywhere starts the visible ones
+    // and "unlocks" the rest so they can start on their own when scrolled into view.
+    const loopers = () => [...document.querySelectorAll<HTMLVideoElement>('video[autoplay], video[data-autoplay], video[data-reel], .film video')];
+    loopers().forEach((v) => { v.muted = true; v.playsInline = true; });
+    const unlock = () => {
+      loopers().forEach((v) => {
+        const r = v.getBoundingClientRect();
+        const onScreen = r.bottom > 0 && r.top < innerHeight;
+        v.play().then(() => { if (!onScreen) v.pause(); }).catch(() => {});
+      });
+      removeEventListener('touchend', unlock);
+      removeEventListener('click', unlock);
+    };
+    addEventListener('touchend', unlock, { passive: true });
+    addEventListener('click', unlock);
+
     // Mobile menu
     const dlg = document.getElementById('menu') as HTMLDialogElement | null;
     document.querySelector('[data-open-menu]')?.addEventListener('click', () => dlg?.showModal());

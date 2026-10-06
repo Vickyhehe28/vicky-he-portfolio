@@ -20,7 +20,7 @@ cover: ../../assets/projects/zoo/poster-wall.jpg
 coverAlt: "Wall of Lincoln Park Zoo posters with animal portraits and the ZOO logo, a cyclist passing by"
 
 # Case study
-heroSrc: /projects/zoo/zoo-hero.mov
+heroSrc: /projects/zoo/zoo-hero.mp4
 heroAlt: "The ZOO logo filling with animal photographs"
 
 overview: "Located in the Lincoln Park neighborhood just north of downtown Chicago, the Lincoln Park Zoo is one of the oldest free-admission zoos in the United States, housing over 1,100 animals and serving as a global leader in wildlife conservation and research."

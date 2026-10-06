@@ -1,0 +1,92 @@
+---
+/**
+ * Playground: side projects and things made for fun, in one masonry wall.
+ * Edit src/data/playground.json to add pieces (images, GIFs or .mp4 videos in public/playground/).
+ * A plain gallery: no captions. Clicking a piece opens it bigger.
+ */
+import Base from '../layouts/Base.astro';
+import data from '../data/playground.json';
+
+interface Item { src?: string; alt?: string; ratio?: string; frame?: boolean }
+const items: Item[] = data.items;
+const isVideo = (s?: string) => !!s && /\.(mp4|webm|mov)$/i.test(s);
+---
+<Base title="Playground" current="playground">
+  <header class="pg-head">
+    <p class="eyebrow">( playground )</p>
+    <p class="pg-intro">{data.intro}</p>
+  </header>
+
+  <ul class="pg-wall" role="list" data-pg>
+    {items.map((it, i) => (
+      <li class="pg-item">
+        <button type="button" class:list={['pg-open', { framed: it.frame }]} data-open={i} aria-label={`View piece ${i + 1}`} disabled={!it.src}>
+          {it.src ? (
+            isVideo(it.src)
+              ? <video src={it.src} muted loop playsinline preload="none" aria-label={it.alt} data-autoplay></video>
+              : <img src={it.src} alt={it.alt ?? ''} loading={i < 6 ? 'eager' : 'lazy'} decoding="async" />
+          ) : (
+            <span class="pg-ph" style={`aspect-ratio:${it.ratio ?? '4 / 5'}`}>[your work]</span>
+          )}
+        </button>
+      </li>
+    ))}
+  </ul>
+
+  <dialog class="pg-viewer" data-viewer aria-label="Playground viewer (press Escape or click outside to close)">
+    <div class="pg-v" data-vbox></div>
+  </dialog>
+  <script type="application/json" data-items set:html={JSON.stringify(items)}></script>
+</Base>
+
+<style>
+  .pg-head { padding: 56px var(--gutter) 32px; display: grid; gap: 12px; }
+  .pg-intro { font: 400 clamp(20px, 2vw, 28px)/1.35 var(--display); letter-spacing: -0.015em; max-width: 34ch; }
+
+  .pg-wall { columns: 1; column-gap: 16px; padding: 0 var(--gutter); }
+  @media (min-width: 700px) { .pg-wall { columns: 2; } }
+  @media (min-width: 1024px) { .pg-wall { columns: 3; } }
+  .pg-item { break-inside: avoid; margin-bottom: 16px; }
+  .pg-open { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; border-radius: var(--radius); overflow: hidden; }
+  .pg-open:disabled { cursor: default; }
+  /* Thin grey edge for pieces on white, so they don't melt into the page */
+  .pg-open.framed { position: relative; }
+  .pg-open.framed::after { content: ''; position: absolute; inset: 0; border: 1px solid #e2e2e2; border-radius: inherit; pointer-events: none; }
+  .pg-open img, .pg-open video { display: block; width: 100%; height: auto; transition: transform .6s var(--ease); }
+  .pg-open:not(:disabled):hover img, .pg-open:not(:disabled):hover video { transform: scale(1.03); }
+  .pg-ph { display: grid; place-items: center; width: 100%; background: #efefef; color: var(--grey); font-size: 13px; }
+
+  .pg-viewer { width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: rgba(12,12,12,.94); cursor: zoom-out; }
+  .pg-viewer[open] { display: grid; place-items: center; }
+  .pg-v :global(img), .pg-v :global(video) { display: block; max-width: calc(100vw - 48px); max-height: calc(100svh - 48px); border-radius: 10px; cursor: default; }
+</style>
+
+<script>
+  const items: { src?: string; alt?: string }[] = JSON.parse(document.querySelector('[data-items]')!.textContent || '[]');
+  const viewer = document.querySelector<HTMLDialogElement>('[data-viewer]')!;
+  const box = viewer.querySelector<HTMLElement>('[data-vbox]')!;
+  let current = 0;
+  const show = (i: number) => {
+    const list = items.map((it, k) => (it.src ? k : -1)).filter((k) => k >= 0);
+    if (!list.length) return;
+    current = list[(list.indexOf(i) + list.length) % list.length] ?? list[0];
+    const it = items[current];
+    box.innerHTML = '';
+    const el = /\.(mp4|webm|mov)$/i.test(it.src!) ? Object.assign(document.createElement('video'), { src: it.src!, muted: true, loop: true, autoplay: true, playsInline: true, controls: true })
+      : Object.assign(document.createElement('img'), { src: it.src!, alt: it.alt ?? '' });
+    box.append(el);
+  };
+  const step = (d: number) => {
+    const list = items.map((it, k) => (it.src ? k : -1)).filter((k) => k >= 0);
+    show(list[(list.indexOf(current) + d + list.length) % list.length]);
+  };
+  document.querySelectorAll<HTMLElement>('[data-pg] [data-open]').forEach((b) => b.addEventListener('click', () => { show(Number(b.dataset.open)); viewer.showModal(); }));
+  viewer.addEventListener('click', (e) => { if (e.target === viewer || e.target === box) viewer.close(); });
+  viewer.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') step(1); if (e.key === 'ArrowLeft') step(-1); });
+  viewer.addEventListener('close', () => { box.innerHTML = ''; });
+  // Wall videos play (muted, looping) only while on screen
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((es) => es.forEach((e) => { const v = e.target as HTMLVideoElement; if (e.isIntersecting) v.play().catch(() => {}); else v.pause(); }), { rootMargin: '200px 0px' });
+    document.querySelectorAll<HTMLVideoElement>('[data-pg] video').forEach((v) => io.observe(v));
+  }
+</script>

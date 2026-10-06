@@ -1,0 +1,88 @@
+{
+  "intro": "Ideas I let out to play.",
+  "_how": "Each piece: src (image, GIF or .mp4 in /public/playground/) and alt (a short description for screen readers). Pieces show in this order. Leave src out for a placeholder. Add \"frame\": true to give a piece with a white background a thin grey edge.",
+  "items": [
+    {
+      "src": "/playground/i-love-design.gif",
+      "alt": "Animated I love design wordmark with a red heart and glitching letters",
+      "frame": true
+    },
+    {
+      "src": "/playground/art-basel-poster.webp",
+      "alt": "Art Basel Hong Kong poster with pink vertical type over black looping steel forms"
+    },
+    {
+      "src": "/playground/rose.webp",
+      "alt": "The word Rose! in pink script on a green oval"
+    },
+    {
+      "src": "/playground/aerofoil.webp",
+      "alt": "Font Friday post for Aerofoil, glowing neon letters on black"
+    },
+    {
+      "src": "/playground/saic-reels.mp4",
+      "alt": "Vertical reel for SAIC AIGA"
+    },
+    {
+      "src": "/playground/courses-book.webp",
+      "alt": "Open book spread with glitched COURSES type and course lists"
+    },
+    {
+      "src": "/playground/loops.webp",
+      "alt": "Pastel looping lines on cream"
+    },
+    {
+      "src": "/playground/sweet.mp4",
+      "alt": "Motion piece: sweet"
+    },
+    {
+      "src": "/playground/rebel-tag.webp",
+      "alt": "Font Friday post for Rebel Tag, inflated turquoise letters"
+    },
+    {
+      "src": "/playground/bronze.webp",
+      "alt": "Bronze by gold heard the hoofirons, pink type on blue"
+    },
+    {
+      "src": "/playground/moma-poster.webp",
+      "alt": "MoMA photography exhibitions poster with repeating headline type and hand-drawn marks"
+    },
+    {
+      "src": "/playground/looking-glass-logo.mp4",
+      "alt": "Looking Glass logo animation"
+    },
+    {
+      "src": "/playground/floodplain.webp",
+      "alt": "Font Friday post for Floodplain, chrome script on a purple gradient"
+    },
+    {
+      "src": "/playground/he-gnashed.webp",
+      "alt": "Yellow serif text growing heavier line by line on black"
+    },
+    {
+      "src": "/playground/hands-a.gif",
+      "alt": "Animated letter A formed by two arms and a hand, black and white",
+      "frame": true
+    },
+    {
+      "src": "/playground/nexa.webp",
+      "alt": "Nexa AI mascot wearing headphones and a VR headset in a browser window"
+    },
+    {
+      "src": "/playground/tt-ricks.webp",
+      "alt": "Font Friday post for TT Ricks, red type on a glitchy dark background"
+    },
+    {
+      "src": "/playground/saic-marketing.mp4",
+      "alt": "SAIC marketing motion piece"
+    },
+    {
+      "src": "/playground/looking-glass-reels.mp4",
+      "alt": "Three Looking Glass reels"
+    },
+    {
+      "src": "/playground/unity-world.webp",
+      "alt": "A 3D garden world with cherry trees and a torii gate, built in Unity"
+    }
+  ]
+}
